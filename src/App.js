@@ -113,7 +113,7 @@ function App() {
 
       const intervalId = setInterval(async () => {
         try {
-          const progressRes = await axios.get(`https://isaac-sampler-backend.onrender.com/${taskId}`);
+          const progressRes = await axios.get(`https://isaac-sampler-backend.onrender.com/progress/${taskId}`);
           setStage(progressRes.data.stage);
 
           if (progressRes.data.stage === "No files found") {
