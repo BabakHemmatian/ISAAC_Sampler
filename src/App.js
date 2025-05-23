@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
 import {
   Box,
@@ -16,11 +15,12 @@ import {
   CircularProgress,
   Container,
   FormControl,
-  InputLabel
 } from "@mui/material";
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from 'react-router-dom';
 
 const theme = createTheme({
   palette: {
@@ -37,6 +37,7 @@ const theme = createTheme({
 });
 
 function App() {
+  const [supabase, setSupabase] = useState(null);
   const [session, setSession] = useState(null);
   const [socialGroup, setSocialGroup] = useState("");
   const [startDate, setStartDate] = useState(null);
@@ -49,15 +50,42 @@ function App() {
   const [issueDesc, setIssueDesc] = useState("");
   const [issueLoading, setIssueLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [pollIntervalId, setPollIntervalId] = useState(null);
+
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const isPasswordResetFlow =
+    location.pathname === '/update-password' || params.has('code');
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    async function setupSupabase() {
+      if (typeof fetch === 'undefined') {
+        const { default: fetchPoly } = await import('cross-fetch');
+        global.fetch = fetchPoly;
+        window.fetch = fetchPoly;
+      }
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = 'https://bcaeugxhaokrankuwtsa.supabase.co';
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjYWV1Z3hoYW9rcmFua3V3dHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMjA0NTksImV4cCI6MjA1Nzc5NjQ1OX0.3YJB_NLsvIl2fF_EGivT2I8N26TXyirpVnX06BPRbg4';
+      const client = createClient(supabaseUrl, supabaseAnonKey);
+      setSupabase(client);
+    }
+    setupSupabase();
   }, []);
 
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    return () => subscription?.unsubscribe?.();
+  }, [supabase]);
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
+    if (supabase) {
+      await supabase.auth.signOut();
+      setSession(null);
+      window.location.replace('/');
+    }
   };
 
   const formatDate = (date) => {
@@ -83,20 +111,22 @@ function App() {
 
       const taskId = res.data.task_id;
 
-      const pollInterval = setInterval(async () => {
+      const intervalId = setInterval(async () => {
         try {
           const progressRes = await axios.get(`https://isaac-sampler-backend.onrender.com/${taskId}`);
           setStage(progressRes.data.stage);
 
           if (progressRes.data.stage === "No files found") {
-            clearInterval(pollInterval);
+            clearInterval(intervalId);
+            setPollIntervalId(null);
             setStage("");
             setLoading(false);
             setSnackbar({ open: true, message: "No files found for the selected range.", severity: "error" });
           }
 
           if (progressRes.data.stage === "Done" && progressRes.data.download_link) {
-            clearInterval(pollInterval);
+            clearInterval(intervalId);
+            setPollIntervalId(null);
             setDownloadLink(progressRes.data.download_link);
             setSnackbar({ open: true, message: "File ready for download!", severity: "success" });
             setSocialGroup("");
@@ -107,16 +137,29 @@ function App() {
             setLoading(false);
           }
         } catch (err) {
-          clearInterval(pollInterval);
+          clearInterval(intervalId);
+          setPollIntervalId(null);
           setStage("Error");
           setLoading(false);
           setSnackbar({ open: true, message: "Progress check failed.", severity: "error" });
         }
       }, 1000);
+
+      setPollIntervalId(intervalId);
     } catch (err) {
       setSnackbar({ open: true, message: `Sampling failed: ${err.message}`, severity: "error" });
       setLoading(false);
     }
+  };
+
+  const handleStop = () => {
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      setPollIntervalId(null);
+    }
+    setLoading(false);
+    setStage("");
+    setSnackbar({ open: true, message: "Sampling stopped by user.", severity: "info" });
   };
 
   const handleIssueSubmit = async () => {
@@ -139,7 +182,11 @@ function App() {
     setIssueLoading(false);
   };
 
-  if (!session) return <Auth />;
+  if (!supabase) {
+    return <div>Loading Supabase client…</div>;
+  }
+
+  if (!session || isPasswordResetFlow) return <Auth supabase={supabase} />; // Pass the client to Auth
 
   return (
     <ThemeProvider theme={theme}>
@@ -147,10 +194,10 @@ function App() {
         <AppBar position="static">
           <Toolbar sx={{ justifyContent: 'space-between' }}>
             <Typography variant="h6">ISAAC App</Typography>
-            <Box>
+            <Box sx={{ justifyContent: 'space-between' }}>
               <Button color="inherit" onClick={() => setPage("home")}>Home</Button>
               <Button color="inherit" onClick={() => setPage("issue")}>Report Issue</Button>
-              <Button variant="outlined" color="inherit" onClick={handleLogout}>Logout</Button>
+              <Button color="inherit" onClick={handleLogout}>Logout</Button>
             </Box>
           </Toolbar>
         </AppBar>
@@ -162,13 +209,13 @@ function App() {
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 Select a social group and time period to retrieve a random sample of Reddit posts in ZIP format.
               </Typography>
-              <br></br>
+              <br />
+
               <Grid container direction="column" spacing={3}>
                 <Grid item>
                   <FormControl fullWidth>
                     <TextField
                       select
-                      labelId="group-label"
                       label="Social Group"
                       value={socialGroup}
                       onChange={(e) => setSocialGroup(e.target.value)}
@@ -182,7 +229,7 @@ function App() {
 
                 <Grid item>
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <Box sx={{ display: "flex", gap: 20, '& .MuiFormControl-root.MuiPickersTextField-root': {
+                  <Box sx={{ display: "flex", gap: 20, '& .MuiFormControl-root.MuiPickersTextField-root': {
                       width: '100%'
                     } }}>
                       <DatePicker
@@ -192,14 +239,7 @@ function App() {
                         minDate={new Date(2007, 0)}
                         maxDate={new Date(2023, 11)}
                         onChange={(newValue) => setStartDate(newValue)}
-                        renderInput={(params) => (
-                          <TextField
-                            fullWidth
-                            {...params}
-                            helperText="Choose a start date (2007–2023)"
-                            sx={{ flex: 1 }}
-                          />
-                        )}
+                        renderInput={(params) => <TextField fullWidth {...params} />}
                       />
                       <DatePicker
                         views={["year", "month"]}
@@ -208,20 +248,11 @@ function App() {
                         minDate={startDate || new Date(2007, 0)}
                         maxDate={new Date(2023, 11)}
                         onChange={(newValue) => setEndDate(newValue)}
-                        renderInput={(params) => (
-                          <TextField
-                            fullWidth
-                            {...params}
-                            helperText="Choose an end date (after start date)"
-                            sx={{ flex: 1 }}
-                          />
-                        )}
+                        renderInput={(params) => <TextField fullWidth {...params} />}
                       />
                     </Box>
                   </LocalizationProvider>
                 </Grid>
-
-
 
                 <Grid item>
                   <TextField
@@ -230,14 +261,27 @@ function App() {
                     label="Number of Documents (Optional)"
                     value={numDocs}
                     onChange={(e) => setNumDocs(e.target.value)}
-                    helperText="Leave blank to retrieve all available documents."
                   />
                 </Grid>
 
-                <Grid item>
+                <Grid item sx={{ display: 'flex', gap: 2 }}>
                   <Button variant="contained" onClick={handleSample} disabled={loading}>
                     {loading ? <><CircularProgress size={20} sx={{ mr: 1 }} /> Retrieving...</> : "Retrieve"}
                   </Button>
+
+                  <AnimatePresence>
+                    {loading && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <Button variant="outlined" color="error" onClick={handleStop}>
+                          Stop
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </Grid>
 
                 {stage && (
