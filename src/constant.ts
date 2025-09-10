@@ -26,7 +26,7 @@ export const UI_TEXT = {
     sampleFailed: "Error: Sampling failed. If the issue persists, please notify us via the \"Report and Issue\" button in the top right.",
     issueEmpty: "Please describe the issue.",
     issueSuccess: "Issue submitted successfully!",
-    issueError: "Error: Failed to send issue report. If the issue persists, please send an email to ***.",
+    issueError: "Error: Failed to send issue report. If the issue persists, please send an email to kurdisocialcoglab@gmail.com.",
   },
   auth: {
     welcomeTitle: "Welcome to the Illinois Social Attitudes Aggregate Corpus (ISAAC)",
