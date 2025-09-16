@@ -17,6 +17,8 @@ import { UI_TEXT } from "./constant.ts";
 const LOGO_MARK = "/ISAAC Logo 2.png";
 const FAVICON   = "/ISAAC Logo 3.png";
 
+const html = (s) => ({ __html: s ?? "" });
+
 const BR_ONLY = "12px 12px 0px 12px";
 const BR_INPUT_SX = {
   "& .MuiOutlinedInput-root": { borderRadius: BR_ONLY },
@@ -27,7 +29,6 @@ const BR_INPUT_SX = {
 const HEADLINE_FF =
   '"OctoberCompressedDevanagari","IBM Plex Sans Devanagari","IBM Plex Sans",sans-serif';
 
-// —— Theme: fonts + colors + global BR-only corners ——
 const theme = createTheme({
   palette: {
     primary: { main: "#318CE7" },
@@ -35,7 +36,6 @@ const theme = createTheme({
     text: { primary: "#2D2D2D" }
   },
   typography: {
-    // Global UI/body font
     fontFamily:
       '"IBM Plex Sans Devanagari","IBM Plex Sans","Roboto","Helvetica Neue",Arial,sans-serif',
     // Headings use display font with Devanagari support
@@ -74,7 +74,6 @@ function App() {
   const [numDocs, setNumDocs] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // progress fields from API
   const [stage, setStage] = useState("");
   const [percent, setPercent] = useState(null);
   const [etaHuman, setEtaHuman] = useState(null);
@@ -87,7 +86,6 @@ function App() {
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [pollIntervalId, setPollIntervalId] = useState(null);
 
-  // Load fonts (IBM Plex Sans Devanagari from Google; OctoberCompressedDevanagari is local)
   useEffect(() => {
     const pre1 = document.createElement("link");
     pre1.rel = "preconnect";
@@ -130,7 +128,6 @@ function App() {
     setupSupabase();
   }, []);
 
-  // Favicon + title
   useEffect(() => {
     document.title = UI_TEXT?.appTitle ?? "ISSAC Sampler";
     const existing = document.querySelector("link[rel~='icon']");
@@ -236,7 +233,6 @@ function App() {
     setIssueLoading(false);
   };
 
-  // —— LOGIN BRANCH (unchanged layout) ——
   if (!session) {
     return (
       <>
@@ -254,7 +250,6 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {/* Register OctoberCompressedDevanagari + set body font explicitly */}
       <GlobalStyles styles={`
         @font-face {
           font-family: 'OctoberCompressedDevanagari';
@@ -267,7 +262,6 @@ function App() {
       `} />
 
       <Box sx={{ flexGrow: 1, backgroundColor: "background.default", minHeight: "100vh" }}>
-        {/* Light blue navbar with bottom-right radius */}
         <AppBar
           position="static"
           elevation={0}
@@ -298,7 +292,6 @@ function App() {
           </Toolbar>
         </AppBar>
 
-        {/* White page body below navbar */}
         <Container
           maxWidth="md"
           sx={{ py: 4, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}
@@ -329,15 +322,19 @@ function App() {
                 </Typography>
                 <Typography
                   variant="body2"
+                  component="div"
                   sx={{
                     mt: 1.5,
                     maxWidth: 640,
                     opacity: 0.95,
                     fontFamily: HEADLINE_FF
                   }}
-                >
-                  {UI_TEXT?.homeSubtitle ?? "Select a social group and time period to retrieve a random sample of Reddit posts in ZIP format."}
-                </Typography>
+                  dangerouslySetInnerHTML={html(
+                    UI_TEXT?.homeSubtitle ??
+                      "Select a social group and time period to retrieve a random sample of Reddit posts in ZIP format."
+                  )}
+                />
+
               </Box>
 
               <Grid container direction="column" spacing={3}>
@@ -511,15 +508,18 @@ function App() {
                 </Typography>
                 <Typography
                   variant="body2"
+                  component="div"
                   sx={{
                     mt: 1.5,
                     maxWidth: 640,
                     opacity: 0.95,
                     fontFamily: HEADLINE_FF
                   }}
-                >
-                  {UI_TEXT?.issueSubtitle ?? "If you notice any bugs, inconsistencies, or have feature suggestions, please describe them below. Your email will be used to follow up if needed."}
-                </Typography>
+                  dangerouslySetInnerHTML={html(
+                    UI_TEXT?.issueSubtitle ??
+                      "If you notice any bugs, inconsistencies, or have feature suggestions, please describe them below. Your email will be used to follow up if needed."
+                  )}
+                />
               </Box>
 
               <TextField

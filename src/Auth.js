@@ -8,6 +8,8 @@ import { UI_TEXT } from './constant.ts';
 
 const LOGO_PRIMARY = "/ISAAC Logo 1.png"; // ensure this exists in /public
 
+const html = (s) => ({ __html: s ?? "" });
+
 // One place to control the radius value (for other usage)
 const BR_ONLY = "12px 12px 0 12px";
 
@@ -222,7 +224,10 @@ function Auth({ supabase }) {
                 style={{ width: "100%", maxWidth: 320, height: "auto", marginBottom: 12 }}
               />
               {/* <h1 className="isaac-heading mb-3">{UI_TEXT.auth.welcomeTitle}</h1> */}
-              <p className="text-secondary">{UI_TEXT.auth.welcomeText}</p>
+              <div
+                className="text-secondary"
+                dangerouslySetInnerHTML={html(UI_TEXT.auth.welcomeText)}
+              />
               <p className="text-muted small mb-0">{UI_TEXT.auth.copyright}</p>
             </div>
           </div>

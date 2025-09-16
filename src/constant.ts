@@ -2,7 +2,7 @@ export const UI_TEXT = {
   appTitle: "Illinois Social Attitudes Aggregate Corpus (ISAAC)",
   homeTitle: "ISAAC Sampler",
   homeSubtitle:
-    "This tool allows you to download either the <strong>entirety<strong> or a <strong>random subset<strong> of the labeled discourse related to each of the six social groups included in ISAAC. Just choose a social group, a continuous timeframe between Jan 2007 and Dec 2023 and click on retrieve.<br><br><strong>Note:</strong> If no document count is indicated, the website will return all relevant data. If a certain number is entered for the sample size, the tool will generate a random set of documents sampled equally from each included month. <u>Random samples take longer to generate.</u>",
+    "This tool allows you to download either the <strong>entirety</strong> or a <strong>random subset</strong> of the labeled discourse related to each of the six social groups included in ISAAC. Just choose a social group, a continuous timeframe between Jan 2007 and Dec 2023 and click on retrieve.<br><br><strong>Note:</strong> If no document count is indicated, the website will return all relevant data. If a certain number is entered for the sample size, the tool will generate a random set of documents sampled equally from each included month. <u>Random samples take longer to generate.</u>",
   socialGroupLabel: "Social Group",
   socialGroupHelper: "Select a social group to sample posts from.",
   numDocsLabel: "Number of Documents (Optional)",
@@ -31,7 +31,7 @@ export const UI_TEXT = {
   auth: {
     welcomeTitle: "Welcome to the Illinois Social Attitudes Aggregate Corpus (ISAAC)",
     welcomeText:
-      "This website provides <strong>coding-free access<strong> to the <strong>most comprehensive labeled dataset of social media discourse<strong> about six major <strong>identity-based distinctions<strong>:<br><br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br><br>This English dataset contains *** Reddit submissions and comments, thoroughly cleaned and labeled for moralized language, generalized assertions, sentiment and emotion.",
+      "This website provides <strong>coding-free access</strong> to the <strong>most comprehensive labeled dataset of social media discourse</strong> about six major <strong>identity-based distinctions</strong>:<br><br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br><br>This English dataset contains *** Reddit submissions and comments, thoroughly cleaned and labeled for moralized language, generalized assertions, sentiment and emotion.",
     copyright: "\u00A9 2025 Social Cognition Lab, University of Illinois at Urbana-Champaign",
     loginTitle: "Login to Your ISAAC Account",
     signupTitle: "Do not have an account with us? Create one with just an email.",
