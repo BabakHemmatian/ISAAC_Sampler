@@ -2,7 +2,7 @@ export const UI_TEXT = {
   appTitle: "Illinois Social Attitudes Aggregate Corpus (ISAAC)",
   homeTitle: "ISAAC Sampler",
   homeSubtitle:
-    "This tool allows you to download either the <strong>entirety</strong> or a <strong>random subset</strong> of the labeled discourse related to each of the six social groups included in ISAAC. Just choose a social group, a continuous timeframe between Jan 2007 and Dec 2023 and click on retrieve.<br><br><strong>Note:</strong> If no document count is indicated, the website will return all relevant data. If a certain number is entered for the sample size, the tool will generate a random set of documents sampled equally from each included month. <u>Random samples take longer to generate.</u>",
+  "This tool allows you to download either the <strong>entirety</strong> or a <strong>random subset</strong> of the labeled discourse related to each of the six social groups included in ISAAC. Just choose a social group, a continuous timeframe between Jan 2007 and Dec 2023 and click on retrieve.<br><br><strong>Note:</strong> If no document count is indicated, the website will return all relevant data. If a certain number is entered for the sample size, the tool will generate a random set of documents sampled equally from each included month. <u>Random samples take longer to generate.</u> For the definition of each column in the output, please see <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md'>here</a>.",
   socialGroupLabel: "Social Group",
   socialGroupHelper: "Select a social group to sample posts from.",
   numDocsLabel: "Number of Documents (Optional)",
