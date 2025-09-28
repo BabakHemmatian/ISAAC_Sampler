@@ -31,7 +31,7 @@ export const UI_TEXT = {
   auth: {
     welcomeTitle: "Welcome to the Illinois Social Attitudes Aggregate Corpus (ISAAC)",
     welcomeText:
-      "This website provides <strong>coding-free access</strong> to the <strong>most comprehensive labeled dataset of social media discourse</strong> about six major <strong>identity-based distinctions</strong>:<br><br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br><br>This English dataset contains *** Reddit submissions and comments, thoroughly cleaned and labeled for moralized language, generalized assertions, sentiment and emotion.",
+      "This website provides <strong>coding-free access</strong> to the <strong>most comprehensive labeled dataset of social media discourse</strong> about six major <strong>identity-based distinctions</strong>:<br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br>This English dataset contains 720,386,985 Reddit comments thoroughly cleaned and labeled for moralized language, generalized assertions, sentiment and emotion.",
     copyright: "\u00A9 2025 Social Cognition Lab, University of Illinois at Urbana-Champaign",
     loginTitle: "Login to Your ISAAC Account",
     signupTitle: "Do not have an account with us? Create one with just an email.",
