@@ -25,7 +25,13 @@ function Auth({ supabase }) {
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const isPasswordResetFlow = location.pathname === '/update-password' || params.has('code');
+  const hashParams = new URLSearchParams(location.hash ? location.hash.slice(1) : '');
+  const queryType = params.get('type');
+  const hashType = hashParams.get('type');
+  const isRecoveryFlow = queryType === 'recovery' || hashType === 'recovery';
+  const hasRecoveryCode = params.has('code') && isRecoveryFlow;
+  const hasRecoveryTokens = !!(hashParams.get('access_token') && hashParams.get('refresh_token') && isRecoveryFlow);
+  const isPasswordResetFlow = location.pathname === '/update-password' || hasRecoveryCode || hasRecoveryTokens;
 
   // Load IBM Plex Sans Devanagari from Google Fonts
   useEffect(() => {
@@ -54,17 +60,20 @@ function Auth({ supabase }) {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('code')) {
+    if (hasRecoveryCode && supabase) {
       (async () => {
-        const { error } = await supabase.auth.exchangeCodeForSession();
-        if (error) setError(UI_TEXT.auth.resetError);
+        try {
+          const { error } = await supabase.auth.exchangeCodeForSession();
+          if (error) setError(UI_TEXT.auth.resetError);
+        } catch (err) {
+          setError(`Failed to verify reset session: ${err.message}`);
+        }
       })();
     }
-  }, []);
+  }, [supabase, hasRecoveryCode]);
 
   useEffect(() => {
-    if (!isPasswordResetFlow) return;
+    if (!isPasswordResetFlow || !supabase) return;
     const queryString = window.location.hash
       ? window.location.hash.slice(1)
       : window.location.search.slice(1);
@@ -74,13 +83,17 @@ function Auth({ supabase }) {
 
     if (access_token && refresh_token) {
       (async () => {
-        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (error) setError(UI_TEXT.auth.resetError);
+        try {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (error) setError(UI_TEXT.auth.resetError);
+        } catch (err) {
+          setError(`Failed to set session: ${err.message}`);
+        }
       })();
-    } else {
+    } else if (location.pathname === '/update-password') {
       setError(UI_TEXT.auth.resetInvalid);
     }
-  }, [isPasswordResetFlow]);
+  }, [isPasswordResetFlow, supabase, location.pathname]);
 
   const handleAuth = async () => {
     setError(null); setSuccess(null);
@@ -88,20 +101,34 @@ function Auth({ supabase }) {
       setError(`${UI_TEXT.auth.email} and ${UI_TEXT.auth.password} are required.`);
       return;
     }
-    let result;
-    if (mode === 'login') {
-      result = await supabase.auth.signInWithPassword({ email, password });
-    } else {
-      result = await supabase.auth.signUp({ email, password });
+    if (!supabase) {
+      setError('Authentication system not ready. Please refresh the page.');
+      return;
     }
-    if (result.error) {
-      setError(result.error.message);
-    } else {
-      setSuccess(
-        mode === 'login'
-          ? `${UI_TEXT.auth.login} successful!`
-          : `${UI_TEXT.auth.signup} successful! Check your email for confirmation.`
-      );
+    setLoading(true);
+    try {
+      let result;
+      if (mode === 'login') {
+        result = await supabase.auth.signInWithPassword({ email, password });
+      } else {
+        result = await supabase.auth.signUp({ email, password });
+      }
+      if (result.error) {
+        console.error('Supabase auth error:', result.error);
+        setError(result.error.message || 'Authentication failed. Please check your credentials.');
+      } else {
+        setSuccess(
+          mode === 'login'
+            ? `${UI_TEXT.auth.login} successful!`
+            : `${UI_TEXT.auth.signup} successful! Check your email for confirmation.`
+        );
+      }
+    } catch (err) {
+      console.error('Auth request failed:', err);
+      const errorMessage = err.message || err.toString() || 'Failed to connect to authentication server';
+      setError(`Authentication error: ${errorMessage}. Please check your internet connection and try again.`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,11 +137,22 @@ function Auth({ supabase }) {
       setError(`Enter your ${UI_TEXT.auth.email} first.`);
       return;
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`
-    });
-    if (error) setError(error.message);
-    else setSuccess(UI_TEXT.auth.resetSent);
+    if (!supabase) {
+      setError('Authentication system not ready. Please refresh the page.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`
+      });
+      if (error) setError(error.message);
+      else setSuccess(UI_TEXT.auth.resetSent);
+    } catch (err) {
+      setError(`Failed to send reset email: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdatePassword = async () => {
@@ -123,15 +161,24 @@ function Auth({ supabase }) {
       setError(UI_TEXT.auth.passwordMismatch);
       return;
     }
-    setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      setError(error.message);
-    } else {
-      await supabase.auth.signOut();
-      window.location.replace('/');
+    if (!supabase) {
+      setError('Authentication system not ready. Please refresh the page.');
+      return;
     }
-    setLoading(false);
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        setError(error.message);
+      } else {
+        await supabase.auth.signOut();
+        window.location.replace('/');
+      }
+    } catch (err) {
+      setError(`Failed to update password: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ---------- CSS helpers: fonts + radius (scoped to this page) ----------
@@ -170,6 +217,15 @@ function Auth({ supabase }) {
       border-bottom-left-radius: 0 !important;
     }
   `;
+
+  // Show loading state if supabase is not initialized
+  if (!supabase) {
+    return (
+      <Container className="d-flex align-items-center justify-content-center vh-100">
+        <div>Loading...</div>
+      </Container>
+    );
+  }
 
   // ---------- Password reset view ----------
   if (isPasswordResetFlow) {
@@ -303,8 +359,9 @@ function Auth({ supabase }) {
                 onClick={handleAuth}
                 variant={mode === 'login' ? 'primary' : 'secondary'}
                 className="w-100 mb-2 br-only"
+                disabled={loading}
               >
-                {mode === 'login' ? UI_TEXT.auth.login : UI_TEXT.auth.signup}
+                {loading ? 'Loading...' : (mode === 'login' ? UI_TEXT.auth.login : UI_TEXT.auth.signup)}
               </Button>
               {mode === 'login' && (
                 <Button variant="link" onClick={handlePasswordResetEmail} className="w-100 p-0 br-only">

@@ -4,7 +4,7 @@ import axios from "axios";
 import Auth from "./Auth";
 import {
   Box, AppBar, Toolbar, Typography, Button, TextField, MenuItem,
-  Grid, Snackbar, Alert, CircularProgress, Container, FormControl, Fab,
+  Grid, Snackbar, Alert, CircularProgress, Container, FormControl,
   LinearProgress, Chip, Tooltip, Stack, GlobalStyles
 } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -16,6 +16,9 @@ import { UI_TEXT } from "./constant.ts";
 
 const LOGO_MARK = "/ISAAC Logo 2.png";
 const FAVICON   = "/ISAAC Logo 3.png";
+
+// Backend API URL - Use localhost for local development, empty for production (Nginx proxy)
+const API_BASE_URL = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? "" : "http://localhost:8000");
 
 const html = (s) => ({ __html: s ?? "" });
 
@@ -77,7 +80,6 @@ function App() {
   const [stage, setStage] = useState("");
   const [percent, setPercent] = useState(null);
   const [etaHuman, setEtaHuman] = useState(null);
-  const [etaSeconds, setEtaSeconds] = useState(null);
 
   const [downloadLink, setDownloadLink] = useState(null);
   const [page, setPage] = useState("home");
@@ -117,11 +119,29 @@ function App() {
           global.fetch = fetchPoly; window.fetch = fetchPoly;
         }
         const { createClient } = await import("@supabase/supabase-js");
-        const supabaseUrl = "https://bcaeugxhaokrankuwtsa.supabase.co";
-        const supabaseAnonKey = "YOUR_SUPABASE_ANON_KEY";
-        const client = createClient(supabaseUrl, supabaseAnonKey);
+        const supabaseUrl = "https://rfyavjpuqoepfkxhtzie.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmeWF2anB1cW9lcGZreGh0emllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4Njg1NDYsImV4cCI6MjA3MzQ0NDU0Nn0.pnW2RgIQj0G-CbY3neYc7zciAHrOHxyF8U7edlrwj1U";
+        const client = createClient(supabaseUrl, supabaseAnonKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            flowType: 'pkce'
+          },
+          global: {
+            fetch: (url, options = {}) => {
+              return fetch(url, {
+                ...options,
+                headers: {
+                  ...options.headers,
+                },
+              });
+            }
+          }
+        });
         setSupabase(client);
-      } catch {
+      } catch (err) {
+        console.error("Failed to initialize Supabase client:", err);
         setSupabase(null);
       }
     }
@@ -137,14 +157,31 @@ function App() {
     if (!existing) document.head.appendChild(link);
   }, []);
 
-  const handleLogout = () => setSession(null);
-  const enterAsGuest = () => setSession({ user: { email: "guest@local" }, provider: "guest" });
+  // Listen for auth state changes
+  useEffect(() => {
+    if (!supabase) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setSession(null);
+  };
 
   const formatDate = (date) =>
     date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}` : "";
 
   const resetProgress = () => {
-    setStage(""); setPercent(null); setEtaHuman(null); setEtaSeconds(null); setDownloadLink(null);
+    setStage(""); setPercent(null); setEtaHuman(null); setDownloadLink(null);
   };
 
   const handleSample = async () => {
@@ -160,7 +197,7 @@ function App() {
     resetProgress();
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/sample", {
+      const res = await axios.post(`${API_BASE_URL}/sample`, {
         social_group: socialGroup,
         start_date: formatDate(startDate),
         end_date: formatDate(endDate),
@@ -170,11 +207,10 @@ function App() {
 
       const intervalId = setInterval(async () => {
         try {
-          const { data } = await axios.get(`http://127.0.0.1:8000/progress/${taskId}`);
+          const { data } = await axios.get(`${API_BASE_URL}/progress/${taskId}`);
           setStage(data.stage || "");
           setPercent(typeof data.percent === "number" ? data.percent : null);
           setEtaHuman(data.eta_human || null);
-          setEtaSeconds(typeof data.eta_seconds === "number" ? data.eta_seconds : null);
 
           if (data.stage === "No files found") {
             clearInterval(intervalId); setPollIntervalId(null); setLoading(false);
@@ -210,7 +246,7 @@ function App() {
 
   const handleStop = () => {
     if (pollIntervalId) { clearInterval(pollIntervalId); setPollIntervalId(null); }
-    setLoading(false); setStage(""); setPercent(null); setEtaHuman(null); setEtaSeconds(null);
+    setLoading(false); setStage(""); setPercent(null); setEtaHuman(null);
     setSnackbar({ open: true, message: UI_TEXT?.snackbar?.stopped ?? "Stopped.", severity: "info" });
   };
 
@@ -221,7 +257,7 @@ function App() {
     }
     setIssueLoading(true);
     try {
-      await axios.post("http://127.0.0.1:8000/report_issue", {
+      await axios.post(`${API_BASE_URL}/report_issue`, {
         email: session?.user?.email || "guest@local",
         description: issueDesc
       });
@@ -235,14 +271,7 @@ function App() {
 
   if (!session) {
     return (
-      <>
-        <Auth supabase={supabase} />
-        <Box sx={{ position: "fixed", bottom: 24, right: 24 }}>
-          <Fab variant="extended" color="primary" onClick={enterAsGuest}>
-            Enter app
-          </Fab>
-        </Box>
-      </>
+      <Auth supabase={supabase} />
     );
   }
 
@@ -349,8 +378,12 @@ function App() {
                       disabled={loading}
                       sx={BR_INPUT_SX}
                     >
+                      <MenuItem value="ability">Ability</MenuItem>
+                      <MenuItem value="age">Age</MenuItem>
                       <MenuItem value="race">Race</MenuItem>
                       <MenuItem value="sexuality">Sexuality</MenuItem>
+                      <MenuItem value="skin_tone">Skin Tone</MenuItem>
+                      <MenuItem value="weight">Weight</MenuItem>
                     </TextField>
                   </FormControl>
                 </Grid>
