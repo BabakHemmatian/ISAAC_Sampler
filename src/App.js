@@ -87,6 +87,15 @@ function App() {
   const [issueLoading, setIssueLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [pollIntervalId, setPollIntervalId] = useState(null);
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash ? window.location.hash.slice(1) : "");
+  const isAuthRecoveryFlow =
+    window.location.pathname === "/update-password" ||
+    searchParams.get("type") === "recovery" ||
+    hashParams.get("type") === "recovery" ||
+    !!(hashParams.get("access_token") && hashParams.get("refresh_token"));
+  const isAuthCodeFlow = searchParams.has("code");
+  const forceAuthScreen = isAuthRecoveryFlow || isAuthCodeFlow;
 
   useEffect(() => {
     const pre1 = document.createElement("link");
@@ -269,7 +278,7 @@ function App() {
     setIssueLoading(false);
   };
 
-  if (!session) {
+  if (!session || forceAuthScreen) {
     return (
       <Auth supabase={supabase} />
     );
@@ -393,14 +402,18 @@ function App() {
                     <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                       <DatePicker
                         views={["year", "month"]}
-                        label="Start Date"
+                        label="Start Month (YYYY-MM)"
                         value={startDate}
                         minDate={new Date(2007, 0)}
                         maxDate={new Date(2023, 11)}
                         onChange={(nv) => setStartDate(nv)}
                         slotProps={{
                           popper: { sx: { "& .MuiPaper-root": { borderRadius: BR_ONLY } } },
-                          textField: { sx: BR_INPUT_SX },
+                          textField: {
+                            sx: BR_INPUT_SX,
+                            helperText: "Pick from calendar to avoid format typos.",
+                            inputProps: { readOnly: true }
+                          },
                         }}
                         componentsProps={{ paper: { sx: { borderRadius: BR_ONLY } } }}
                         renderInput={(params) => <TextField fullWidth {...params} sx={BR_INPUT_SX} />}
@@ -409,14 +422,18 @@ function App() {
 
                       <DatePicker
                         views={["year", "month"]}
-                        label="End Date"
+                        label="End Month (YYYY-MM)"
                         value={endDate}
                         minDate={startDate || new Date(2007, 0)}
                         maxDate={new Date(2023, 11)}
                         onChange={(nv) => setEndDate(nv)}
                         slotProps={{
                           popper: { sx: { "& .MuiPaper-root": { borderRadius: BR_ONLY } } },
-                          textField: { sx: BR_INPUT_SX },
+                          textField: {
+                            sx: BR_INPUT_SX,
+                            helperText: "Pick from calendar to avoid format typos.",
+                            inputProps: { readOnly: true }
+                          },
                         }}
                         componentsProps={{ paper: { sx: { borderRadius: BR_ONLY } } }}
                         renderInput={(params) => <TextField fullWidth {...params} sx={BR_INPUT_SX} />}
@@ -493,9 +510,18 @@ function App() {
                 {downloadLink && (
                   <Grid item>
                     <Alert severity="success" sx={{ borderRadius: BR_ONLY }}>
-                      <a href={downloadLink} download target="_blank" rel="noreferrer">
+                      <Button
+                        component="a"
+                        href={downloadLink}
+                        download
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="outlined"
+                        color="success"
+                        sx={{ ml: 0.5 }}
+                      >
                         {UI_TEXT?.downloadZip ?? "Download ZIP"}
-                      </a>
+                      </Button>
                     </Alert>
                   </Grid>
                 )}

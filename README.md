@@ -48,3 +48,18 @@ Hemmatian, B., & Dhamdhere, S.S. (2025). ISAAC Sampler (Frontend)[Computer softw
 ## Deployment
 
 You can deploy the frontend on Vercel. Just make sure the API URL (currently http://127.0.0.1:8000) is updated to point to your deployed FastAPI backend.
+
+### Supabase Auth Redirect Hardening
+
+To prevent signup/reset emails from sending users to localhost, configure both app env and Supabase dashboard:
+
+1. Set frontend env var in production build:
+   - `REACT_APP_PUBLIC_ORIGIN=https://isaac.psychology.illinois.edu`
+2. In Supabase Dashboard -> **Authentication** -> **URL Configuration**:
+   - **Site URL**: `https://isaac.psychology.illinois.edu`
+   - **Redirect URLs**: include
+     - `https://isaac.psychology.illinois.edu/`
+     - `https://isaac.psychology.illinois.edu/update-password`
+3. Remove stale localhost callback URLs from production project settings if they are no longer needed.
+
+The frontend passes explicit redirect URLs in `src/Auth.js` (`emailRedirectTo` for signup and `redirectTo` for reset), and this dashboard configuration ensures email links remain correct in production.

@@ -13,6 +13,24 @@ const html = (s) => ({ __html: s ?? "" });
 // One place to control the radius value (for other usage)
 const BR_ONLY = "12px 12px 0 12px";
 
+const PROD_FALLBACK_ORIGIN = 'https://isaac.psychology.illinois.edu';
+
+function getSafeRedirectOrigin() {
+  const configured = process.env.REACT_APP_PUBLIC_ORIGIN?.trim();
+  if (configured) return configured.replace(/\/+$/, '');
+
+  const origin = window.location.origin;
+  const isLocalhost =
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1') ||
+    origin.includes('0.0.0.0');
+
+  if (process.env.NODE_ENV === 'production' && isLocalhost) {
+    return PROD_FALLBACK_ORIGIN;
+  }
+  return origin;
+}
+
 function Auth({ supabase }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +40,7 @@ function Auth({ supabase }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0);
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -95,6 +114,26 @@ function Auth({ supabase }) {
     }
   }, [isPasswordResetFlow, supabase, location.pathname]);
 
+  useEffect(() => {
+    if (resetCooldownSeconds <= 0) return undefined;
+    const timer = window.setInterval(() => {
+      setResetCooldownSeconds(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resetCooldownSeconds]);
+
+  const getFriendlyResetError = (err) => {
+    const raw = (err?.message || "").toLowerCase();
+    if (
+      raw.includes("rate limit") ||
+      raw.includes("too many requests") ||
+      raw.includes("email rate limit exceeded")
+    ) {
+      return "Too many reset attempts. Please wait about a minute and try again.";
+    }
+    return err?.message || "Unable to send reset email right now. Please try again shortly.";
+  };
+
   const handleAuth = async () => {
     setError(null); setSuccess(null);
     if (!email || !password) {
@@ -111,7 +150,13 @@ function Auth({ supabase }) {
       if (mode === 'login') {
         result = await supabase.auth.signInWithPassword({ email, password });
       } else {
-        result = await supabase.auth.signUp({ email, password });
+        result = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${getSafeRedirectOrigin()}/`,
+          },
+        });
       }
       if (result.error) {
         console.error('Supabase auth error:', result.error);
@@ -141,15 +186,27 @@ function Auth({ supabase }) {
       setError('Authentication system not ready. Please refresh the page.');
       return;
     }
+    if (resetCooldownSeconds > 0) {
+      setError(`Please wait ${resetCooldownSeconds}s before requesting another reset email.`);
+      return;
+    }
     setLoading(true);
     try {
+      // Keep reset flow predictable: avoid reusing an active app session.
+      await supabase.auth.signOut();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`
+        redirectTo: `${getSafeRedirectOrigin()}/update-password`
       });
-      if (error) setError(error.message);
-      else setSuccess(UI_TEXT.auth.resetSent);
+      if (error) {
+        setError(getFriendlyResetError(error));
+        setResetCooldownSeconds(60);
+      } else {
+        setSuccess(UI_TEXT.auth.resetSent);
+        setResetCooldownSeconds(60);
+      }
     } catch (err) {
-      setError(`Failed to send reset email: ${err.message}`);
+      setError(getFriendlyResetError(err));
+      setResetCooldownSeconds(60);
     } finally {
       setLoading(false);
     }
@@ -364,8 +421,15 @@ function Auth({ supabase }) {
                 {loading ? 'Loading...' : (mode === 'login' ? UI_TEXT.auth.login : UI_TEXT.auth.signup)}
               </Button>
               {mode === 'login' && (
-                <Button variant="link" onClick={handlePasswordResetEmail} className="w-100 p-0 br-only">
-                  {UI_TEXT.auth.forgotPassword}
+                <Button
+                  variant="link"
+                  onClick={handlePasswordResetEmail}
+                  className="w-100 p-0 br-only"
+                  disabled={loading || resetCooldownSeconds > 0}
+                >
+                  {resetCooldownSeconds > 0
+                    ? `Try again in ${resetCooldownSeconds}s`
+                    : UI_TEXT.auth.forgotPassword}
                 </Button>
               )}
             </Form>
