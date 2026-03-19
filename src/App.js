@@ -232,10 +232,22 @@ function App() {
             return;
           }
           if (data.download_link) {
-            clearInterval(intervalId); setPollIntervalId(null); setDownloadLink(data.download_link);
-            setSnackbar({ open: true, message: UI_TEXT?.snackbar?.fileReady ?? "Your file is ready.", severity: "success" });
+            clearInterval(intervalId);
+            setPollIntervalId(null);
+          
+            const resolvedDownloadLink =
+              data.download_link.startsWith("http")
+                ? data.download_link
+                : `${API_BASE_URL}${data.download_link}`;
+          
+            setDownloadLink(resolvedDownloadLink);
+            setSnackbar({
+              open: true,
+              message: UI_TEXT?.snackbar?.fileReady ?? "Your file is ready.",
+              severity: "success"
+            });
             setLoading(false);
-          }
+         }
         } catch {
           clearInterval(intervalId); setPollIntervalId(null); setLoading(false);
           setSnackbar({ open: true, message: UI_TEXT?.snackbar?.progressFailed ?? "Failed to fetch progress.", severity: "error" });
