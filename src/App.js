@@ -5,13 +5,12 @@ import Auth from "./Auth";
 import {
   Box, AppBar, Toolbar, Typography, Button, TextField, MenuItem,
   Grid, Snackbar, Alert, CircularProgress, Container, FormControl,
-  LinearProgress, Chip, Tooltip, Stack, GlobalStyles
+  GlobalStyles
 } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { motion, AnimatePresence } from "framer-motion";
 import { UI_TEXT } from "./constant.ts";
 
 const LOGO_MARK = "/ISAAC Logo 2.png";
@@ -76,17 +75,11 @@ function App() {
   const [endDate, setEndDate] = useState(null);
   const [numDocs, setNumDocs] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const [stage, setStage] = useState("");
-  const [percent, setPercent] = useState(null);
-  const [etaHuman, setEtaHuman] = useState(null);
-
-  const [downloadLink, setDownloadLink] = useState(null);
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [page, setPage] = useState("home");
   const [issueDesc, setIssueDesc] = useState("");
   const [issueLoading, setIssueLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-  const [pollIntervalId, setPollIntervalId] = useState(null);
   const searchParams = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash ? window.location.hash.slice(1) : "");
   const isAuthRecoveryFlow =
@@ -189,9 +182,7 @@ function App() {
   const formatDate = (date) =>
     date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}` : "";
 
-  const resetProgress = () => {
-    setStage(""); setPercent(null); setEtaHuman(null); setDownloadLink(null);
-  };
+  const resetRequestState = () => setRequestSubmitted(false);
 
   const handleSample = async () => {
     if (!socialGroup || !startDate || !endDate || startDate > endDate) {
@@ -203,72 +194,45 @@ function App() {
       return;
     }
     setLoading(true);
-    resetProgress();
+    resetRequestState();
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/sample`, {
-        social_group: socialGroup,
-        start_date: formatDate(startDate),
-        end_date: formatDate(endDate),
-        num_docs: numDocs ? Number(numDocs) : undefined
-      });
-      const taskId = res.data.task_id;
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        throw new Error("Your login session is missing. Please log out and log back in.");
+      }
 
-      const intervalId = setInterval(async () => {
-        try {
-          const { data } = await axios.get(`${API_BASE_URL}/progress/${taskId}`);
-          setStage(data.stage || "");
-          setPercent(typeof data.percent === "number" ? data.percent : null);
-          setEtaHuman(data.eta_human || null);
-
-          if (data.stage === "No files found") {
-            clearInterval(intervalId); setPollIntervalId(null); setLoading(false);
-            setSnackbar({ open: true, message: UI_TEXT?.snackbar?.noFiles ?? "No files found for this selection.", severity: "error" });
-            return;
+      const { data } = await axios.post(
+        `${API_BASE_URL}/sample`,
+        {
+          social_group: socialGroup,
+          start_date: formatDate(startDate),
+          end_date: formatDate(endDate),
+          num_docs: numDocs ? Number(numDocs) : undefined
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
           }
-          if (typeof data.stage === "string" && data.stage.startsWith("Error")) {
-            clearInterval(intervalId); setPollIntervalId(null); setLoading(false);
-            setSnackbar({ open: true, message: data.stage, severity: "error" });
-            return;
-          }
-          if (data.download_link) {
-            clearInterval(intervalId);
-            setPollIntervalId(null);
-          
-            const resolvedDownloadLink =
-              data.download_link.startsWith("http")
-                ? data.download_link
-                : `${API_BASE_URL}${data.download_link}`;
-          
-            setDownloadLink(resolvedDownloadLink);
-            setSnackbar({
-              open: true,
-              message: UI_TEXT?.snackbar?.fileReady ?? "Your file is ready.",
-              severity: "success"
-            });
-            setLoading(false);
-         }
-        } catch {
-          clearInterval(intervalId); setPollIntervalId(null); setLoading(false);
-          setSnackbar({ open: true, message: UI_TEXT?.snackbar?.progressFailed ?? "Failed to fetch progress.", severity: "error" });
         }
-      }, 1000);
+      );
 
-      setPollIntervalId(intervalId);
-    } catch (err) {
+      setRequestSubmitted(true);
       setSnackbar({
         open: true,
-        message: `${UI_TEXT?.snackbar?.sampleFailed ?? "Failed to start job"}: ${err.message}`,
+        message: data?.message || UI_TEXT?.snackbar?.emailQueued || "Your request was submitted. We will email the download link when it is ready.",
+        severity: "success"
+      });
+    } catch (err) {
+      const errorDetail = err?.response?.data?.detail || err.message;
+      setSnackbar({
+        open: true,
+        message: `${UI_TEXT?.snackbar?.sampleFailed ?? "Failed to start job"}: ${errorDetail}`,
         severity: "error"
       });
+    } finally {
       setLoading(false);
     }
-  };
-
-  const handleStop = () => {
-    if (pollIntervalId) { clearInterval(pollIntervalId); setPollIntervalId(null); }
-    setLoading(false); setStage(""); setPercent(null); setEtaHuman(null);
-    setSnackbar({ open: true, message: UI_TEXT?.snackbar?.stopped ?? "Stopped.", severity: "info" });
   };
 
   const handleIssueSubmit = async () => {
@@ -479,61 +443,12 @@ function App() {
                       UI_TEXT?.retrieve ?? "Retrieve"
                     )}
                   </Button>
-                  <AnimatePresence>
-                    {loading && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <Button variant="outlined" color="error" onClick={handleStop}>
-                          {UI_TEXT?.stop ?? "Stop"}
-                        </Button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </Grid>
 
-                {loading && (
-                  <Grid item>
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle1" color="text.secondary">
-                        {(UI_TEXT?.currentStage ?? "Current stage") + ": "} {stage || "Initializing..."}
-                      </Typography>
-
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Box sx={{ flexGrow: 1 }}>
-                          {typeof percent === "number" ? (
-                            <LinearProgress variant="determinate" value={Math.max(0, Math.min(100, percent))} />
-                          ) : (
-                            <LinearProgress />
-                          )}
-                        </Box>
-                        <Typography variant="body2" sx={{ minWidth: 48, textAlign: "right" }}>
-                          {typeof percent === "number" ? `${percent.toFixed(0)}%` : "--"}
-                        </Typography>
-                      </Box>
-
-                      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                        <Tooltip title="Estimated time remaining (based on work completed so far)">
-                          <Chip label={`ETA: ${etaHuman ?? "--"}`} size="small" color="default" variant="outlined" />
-                        </Tooltip>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                )}
-
-                {downloadLink && (
+                {requestSubmitted && (
                   <Grid item>
                     <Alert severity="success" sx={{ borderRadius: BR_ONLY }}>
-                      <Button
-                        component="a"
-                        href={downloadLink}
-                        download
-                        target="_blank"
-                        rel="noreferrer"
-                        variant="outlined"
-                        color="success"
-                        sx={{ ml: 0.5 }}
-                      >
-                        {UI_TEXT?.downloadZip ?? "Download ZIP"}
-                      </Button>
+                      {UI_TEXT?.emailQueuedMessage ?? "Your request was submitted. We will email your download link when the file is ready."}
                     </Alert>
                   </Grid>
                 )}
