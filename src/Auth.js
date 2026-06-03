@@ -41,6 +41,7 @@ function Auth({ supabase }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -140,6 +141,10 @@ function Auth({ supabase }) {
       setError(`${UI_TEXT.auth.email} and ${UI_TEXT.auth.password} are required.`);
       return;
     }
+    if (mode === 'signup' && !termsAccepted) {
+      setError(UI_TEXT.auth.termsRequired);
+      return;
+    }
     if (!supabase) {
       setError('Authentication system not ready. Please refresh the page.');
       return;
@@ -155,6 +160,13 @@ function Auth({ supabase }) {
           password,
           options: {
             emailRedirectTo: `${getSafeRedirectOrigin()}/`,
+            // Record proof of Terms of Use consent on the user's metadata.
+            // termsAccepted is guaranteed true here (validated above).
+            data: {
+              terms_accepted: true,
+              terms_accepted_at: new Date().toISOString(),
+              terms_version: UI_TEXT.auth.termsVersion,
+            },
           },
         });
       }
@@ -412,11 +424,24 @@ function Auth({ supabase }) {
                   onChange={e => setPassword(e.target.value)}
                 />
               </Form.Group>
+              {mode === 'signup' && (
+                <Form.Group className="mb-3" controlId="terms-accept">
+                  <Form.Check
+                    type="checkbox"
+                    required
+                    checked={termsAccepted}
+                    onChange={e => setTermsAccepted(e.target.checked)}
+                    label={
+                      <span dangerouslySetInnerHTML={html(UI_TEXT.auth.termsLabel)} />
+                    }
+                  />
+                </Form.Group>
+              )}
               <Button
                 onClick={handleAuth}
                 variant={mode === 'login' ? 'primary' : 'secondary'}
                 className="w-100 mb-2 br-only"
-                disabled={loading}
+                disabled={loading || (mode === 'signup' && !termsAccepted)}
               >
                 {loading ? 'Loading...' : (mode === 'login' ? UI_TEXT.auth.login : UI_TEXT.auth.signup)}
               </Button>

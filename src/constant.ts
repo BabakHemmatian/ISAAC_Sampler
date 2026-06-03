@@ -48,5 +48,12 @@ export const UI_TEXT = {
     updateSuccess: "Password updated successfully.",
     passwordMismatch: "Passwords do not match.",
     resetInvalid: "Reset link is invalid or has expired.",
+    termsLabel:
+      "By using this tool or the associated data and repositories, you agree to the <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Terms_of_Use.md' target='_blank' rel='noopener noreferrer'>Terms of Use</a>.",
+    termsRequired: "You must agree to the Terms of Use to create an account.",
+    // Bump this whenever the Terms of Use document changes substantively. It is
+    // stored on each user's Supabase metadata at signup alongside the acceptance
+    // timestamp, so you can tell which version a given user agreed to.
+    termsVersion: "2026-06-03",
   },
 };
