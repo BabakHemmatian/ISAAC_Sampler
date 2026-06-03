@@ -2,6 +2,10 @@
 
 This repository contains the frontend scripts for [this website](https://isaac.psychology.illinois.edu/). The website allows users to access and download data from the **Illinois Social Attitudes Aggregate Corpus (ISAAC)**, a comprehensive dataset of Reddit discourse from 2007 to 2023 about social groups defined by race, skin tone, weight, sexuality, age and ability.
 
+## Terms of Use
+
+By using this tool, the associated data, or these repositories, you agree to the [Terms of Use](https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Terms_of_Use.md).
+
 If you use this repository in your work, please cite us as follows:
 
 **Note:** Backend scripts can be found [here](https://github.com/BabakHemmatian/ISAAC_Sampler_Backend), while corpus development tools are located within [this repository](https://github.com/BabakHemmatian/Illinois_Social_Attitudes).
