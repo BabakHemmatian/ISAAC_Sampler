@@ -75,6 +75,7 @@ function App() {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [numDocs, setNumDocs] = useState("");
+  const [randomSeed, setRandomSeed] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [stage, setStage] = useState("");
@@ -202,6 +203,29 @@ function App() {
       });
       return;
     }
+    // Validate random seed if provided: must be a non-negative integer.
+    let parsedSeed;
+    if (randomSeed !== "" && randomSeed !== null && randomSeed !== undefined) {
+      const trimmed = String(randomSeed).trim();
+      if (!/^\d+$/.test(trimmed)) {
+        setSnackbar({
+          open: true,
+          message: "Random Seed must be a non-negative integer.",
+          severity: "error"
+        });
+        return;
+      }
+      parsedSeed = Number(trimmed);
+      if (!Number.isSafeInteger(parsedSeed)) {
+        setSnackbar({
+          open: true,
+          message: "Random Seed is too large.",
+          severity: "error"
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     resetProgress();
 
@@ -210,7 +234,8 @@ function App() {
         social_group: socialGroup,
         start_date: formatDate(startDate),
         end_date: formatDate(endDate),
-        num_docs: numDocs ? Number(numDocs) : undefined
+        num_docs: numDocs ? Number(numDocs) : undefined,
+        random_seed: parsedSeed !== undefined ? parsedSeed : undefined
       });
       const taskId = res.data.task_id;
 
@@ -465,6 +490,20 @@ function App() {
                     helperText={UI_TEXT?.numDocsHelper ?? "Leave blank to bundle and return all original files (no sampling)."}
                     disabled={loading}
                     inputProps={{ min: 1 }}
+                    sx={BR_INPUT_SX}
+                  />
+                </Grid>
+
+                <Grid item>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label={UI_TEXT?.randomSeedLabel ?? "Random Seed (Optional)"}
+                    value={randomSeed}
+                    onChange={(e) => setRandomSeed(e.target.value)}
+                    helperText={UI_TEXT?.randomSeedHelper ?? "If a sample size is set above, providing an integer seed produces a reproducible random subset. The seed is appended to the output filename."}
+                    disabled={loading}
+                    inputProps={{ min: 0, step: 1 }}
                     sx={BR_INPUT_SX}
                   />
                 </Grid>

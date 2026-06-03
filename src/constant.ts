@@ -6,6 +6,8 @@ export const UI_TEXT = {
   socialGroupLabel: "Social Group",
   socialGroupHelper: "Select a social group to sample posts from.",
   numDocsLabel: "Number of Documents (Optional)",
+  randomSeedLabel: "Random Seed (Optional)",
+  randomSeedHelper: "If a sample size is set above, providing an integer seed produces a reproducible random subset. The seed is appended to the output filename.",
   retrieve: "Generate Sample",
   retrieving: "Generating...",
   stop: "Stop",
