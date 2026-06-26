@@ -2,17 +2,29 @@ export const UI_TEXT = {
   appTitle: "Illinois Social Attitudes Aggregate Corpus (ISAAC)",
   homeTitle: "ISAAC Sampler",
   homeSubtitle:
-  "Download either the <strong>entire</strong> or a <strong>random subset</strong> of the labeled Reddit discourse included in ISAAC. Just choose a social group and a continuous period between Jan 2007 and Dec 2023, then click <strong>Generate Sample</strong>.<br><br><strong>Note:</strong> If no document count is indicated, the website will return all relevant data. If a certain sample size is entered, it will generate a random set sampled equally from each included month. For the definition of each column in the output, please see <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md' style='color: red;'>here</a>.<br><br><strong>Note:</strong> The .tar output files can be opened with WinRAR or native decompression apps on Linux and Mac computers, same for csv.gz documents.",
+  "Download a <strong>reproducible random sample</strong> of the labeled Reddit discourse in ISAAC, coding-free. Choose a social group and a continuous period between Jan 2007 and Dec 2023, enter how many documents you want, and click <strong>Generate Sample</strong>. The sample is drawn equally from each month in your range; set a <strong>Random Seed</strong> to make it exactly reproducible. For the definition of each column in the output, please see <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md' style='color: red;'>here</a>.<br><br><strong>Want whole monthly files instead of a sample?</strong> Leave <strong>Number of Documents</strong> blank and click Generate — you'll get direct download links (and a Globus folder you can browse), served straight from our storage so even large pulls are fast.<br><br>For scripted queries (e.g., only comments from a specific subreddit), use the <strong>Query Playground</strong> tab; for command-line and bulk-download recipes, see the <strong>Direct Download</strong> tab.",
   socialGroupLabel: "Social Group",
   socialGroupHelper: "Select a social group to sample posts from.",
   numDocsLabel: "Number of Documents (Optional)",
+  numDocsHelper: "Leave blank to get direct download links for the full monthly files (served from our Globus storage). Enter a number for a random sample drawn equally across the months you selected.",
   randomSeedLabel: "Random Seed (Optional)",
+  fullFiles: {
+    heading: "Whole monthly files — direct download",
+    servedNote: "These files download directly from our Globus storage, not through this website, so even large pulls stay fast.",
+    openInGlobus: "Browse & download in Globus",
+    downloadList: "Download file list (isaac_urls.txt)",
+    bulkNote: "To download several files at once without writing any code: open the folder in Globus (button above), install the free Globus Connect Personal app once, then drag-and-drop the files onto your computer.",
+    connectAppLabel: "Get Globus Connect Personal",
+    connectAppUrl: "https://www.globus.org/globus-connect-personal",
+    cliNote: "Prefer the command line? The Direct Download tab has wget / aria2c recipes that use the isaac_urls.txt list above.",
+    excelNote: "Tip: a few recent months are multi-gigabyte CSVs that exceed Excel's row limit — those may need a tool like DuckDB to open.",
+  },
   randomSeedHelper: "If a sample size is set above, providing an integer seed produces a reproducible random subset. The seed is appended to the output filename.",
   retrieve: "Generate Sample",
   retrieving: "Generating...",
   stop: "Stop",
   currentStage: "\u23F3 Current Stage",
-  downloadZip: "Download Results ZIP",
+  downloadSample: "Download Results CSV",
   issueTitle: "Report an Issue",
   issueSubtitle:
     "If you notice any bugs/inconsistencies, or have feature suggestions, please describe them below. The email address associated with your account will be used to follow up if needed.",
@@ -33,8 +45,8 @@ export const UI_TEXT = {
   auth: {
     welcomeTitle: "Welcome to the Illinois Social Attitudes Aggregate Corpus (ISAAC)",
     welcomeText:
-      "This website provides <strong>coding-free access</strong> to the <strong>most comprehensive labeled dataset of social media discourse</strong> about six major <strong>identity-based distinctions</strong> (see <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md'>here</a> for more information):<br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br>This English dataset contains 554,464,184 carefully chosen Reddit comments. Original Reddit submissions and labels for moralized language, generalized assertions, sentiment and emotion will be added to the corpus in the near future.",
-    copyright: "\u00A9 2025 Social Cognition Lab, University of Illinois at Urbana-Champaign",
+      "This website provides <strong>coding-free access</strong> to the <strong>most comprehensive labeled dataset of social media discourse</strong> about six major <strong>identity-based social categories</strong> (see <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md'>here</a> for more information):<br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br>ISAAC contains 527,280,192 thoroughly cleaned Reddit posts (64,581,610 original submissions and 462,698,582 comments). The anonymized dataset includes labels for <strong>moralized language, generalizations, sentiment, emotion and US state-level estimated user locations</strong>.",
+    copyright: "\u00A9 2026 Social Cognition Lab, University of Illinois at Urbana-Champaign",
     loginTitle: "Login to Your ISAAC Account",
     signupTitle: "Do not have an account with us? Create one with just an email.",
     email: "Email address",
@@ -51,6 +63,17 @@ export const UI_TEXT = {
     termsLabel:
       "By using this tool or the associated data and repositories, you agree to the <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Terms_of_Use.md' target='_blank' rel='noopener noreferrer'>Terms of Use</a>.",
     termsRequired: "You must agree to the Terms of Use to create an account.",
+    // ---- Email code verification (signup) ----
+    verifyTitle: "Verify your email",
+    verifyInstruction: "We emailed a 6-digit verification code to <strong>{email}</strong>. Enter it below to finish creating your account.",
+    verifyCodeLabel: "Verification code",
+    verifyButton: "Verify & continue",
+    verifyResend: "Resend code",
+    verifyResendCooldown: "Resend code in {seconds}s",
+    verifyBack: "Use a different email",
+    verifyCodeRequired: "Enter the 6-digit code from your email.",
+    verifySuccess: "Email verified! Signing you in…",
+    signupCodeSent: "Account created. Check your email for a 6-digit verification code.",
     // Bump this whenever the Terms of Use document changes substantively. It is
     // stored on each user's Supabase metadata at signup alongside the acceptance
     // timestamp, so you can tell which version a given user agreed to.

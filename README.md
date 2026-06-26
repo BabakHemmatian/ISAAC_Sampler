@@ -34,16 +34,16 @@ Hemmatian, B., & Dhamdhere, S.S. (2025). ISAAC Sampler (Frontend)[Computer softw
  - Authentication (via Supabase)
  - Date Range selection (Month-Year selection)
  - Social Group Selection (e.g., Sexuality)
- - Download of the complete dataset or a specified random subset
+ - Reproducible random samples drawn equally across the selected months (with an optional seed), downloaded as a single CSV
+ - Direct links to whole monthly files, served from the project's public Globus collection on NCSA Taiga (not streamed through the web server)
  - Sampling Status and ETA Updates shown during document retrieval
  - Stop Button to cancel long-running requests
- - Download ZIP output
  - Issue Reporting Form with email triggers
 
 ## Setup Instructions
 
-1. Clone the repository: ```git clone https://github.com/ssd391/isaac-reddit-sampler-frontend.git```
-2. Navigate to the folder: ```cd isaac-reddit-sampler-frontend```
+1. Clone the repository: ```git clone https://github.com/BabakHemmatian/ISAAC_Sampler.git```
+2. Navigate to the folder: ```cd ISAAC_Sampler```
 3. Install dependencies: ```npm install```
 4. Install additional packages: ```npm install @mui/material @mui/icons-material @mui/x-date-pickers @emotion/react @emotion/styled framer-motion axios```
 5. Set up your supabaseClient.js with your own Supabase URL and Anon Key.

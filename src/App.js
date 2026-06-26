@@ -12,6 +12,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { motion, AnimatePresence } from "framer-motion";
+import { Routes, Route } from "react-router-dom";
 import { UI_TEXT } from "./constant.ts";
 
 const LOGO_MARK = "/ISAAC Logo 2.png";
@@ -21,6 +22,40 @@ const FAVICON   = "/ISAAC Logo 3.png";
 const API_BASE_URL = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? "" : "http://localhost:8000");
 
 const html = (s) => ({ __html: s ?? "" });
+
+// Public/anonymous Globus guest collection on Taiga that serves the raw monthly
+// files. Whole-file ("leave document count blank") downloads point here so the
+// bytes come straight off the storage DTNs, never through this VM.
+const GLOBUS_DATA_BASE = "https://g-05a4b6.2d513.8443.data.globus.org";
+const GLOBUS_COLLECTION_ID = "9fd39b9f-d60e-44c5-b475-691b614c3d46";
+// At or below this many files, lead with clickable links; above it, lead with
+// the Globus folder / command-line options instead of a long wall of links.
+const FULL_FILES_LINKS_MAX = 10;
+
+// Inclusive list of "YYYY-MM" strings between two "YYYY-MM" bounds.
+const monthsBetween = (start, end) => {
+  const out = [];
+  let [y, m] = start.split("-").map(Number);
+  const [ey, em] = end.split("-").map(Number);
+  while (y < ey || (y === ey && m <= em)) {
+    out.push(`${y}-${String(m).padStart(2, "0")}`);
+    m += 1; if (m > 12) { m = 1; y += 1; }
+  }
+  return out;
+};
+
+// Deep-link into the Globus web app File Manager at one category folder.
+const globusFolderLink = (category) =>
+  `https://app.globus.org/file-manager?origin_id=${GLOBUS_COLLECTION_ID}` +
+  `&origin_path=${encodeURIComponent(`/${category}/`)}`;
+
+const prettyBytes = (n) => {
+  if (!n && n !== 0) return null;
+  const u = ["B", "KB", "MB", "GB", "TB"];
+  let i = 0, v = n;
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i += 1; }
+  return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+};
 
 const BR_ONLY = "12px 12px 0px 12px";
 const BR_INPUT_SX = {
@@ -68,7 +103,7 @@ const theme = createTheme({
   }
 });
 
-function App() {
+function MainApp() {
   const [supabase, setSupabase] = useState(null);
   const [session, setSession] = useState(null);
   const [socialGroup, setSocialGroup] = useState("");
@@ -82,7 +117,8 @@ function App() {
   const [percent, setPercent] = useState(null);
   const [etaHuman, setEtaHuman] = useState(null);
 
-  const [downloadLink, setDownloadLink] = useState(null);
+  const [downloadLink, setDownloadLink] = useState("");
+  const [fullFiles, setFullFiles] = useState(null);
   const [page, setPage] = useState("home");
   const [issueDesc, setIssueDesc] = useState("");
   const [issueLoading, setIssueLoading] = useState(false);
@@ -118,6 +154,13 @@ function App() {
       document.head.removeChild(pre2);
       document.head.removeChild(plex);
     };
+  }, []);
+
+  // Allow the static pages' "Report an Issue" tab to deep-link here via /#report-issue
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#report-issue") {
+      setPage("issue");
+    }
   }, []);
 
   // Create a Supabase client only so <Auth /> renders
@@ -191,7 +234,39 @@ function App() {
     date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}` : "";
 
   const resetProgress = () => {
-    setStage(""); setPercent(null); setEtaHuman(null); setDownloadLink(null);
+    setStage(""); setPercent(null); setEtaHuman(null); setDownloadLink(null); setFullFiles(null);
+  };
+
+  // Whole-file ("blank document count") request: resolve the one-category,
+  // month-range selection to direct Globus CSV links. No server round-trip — the
+  // VM does no file I/O and serves none of these bytes.
+  const buildFullFileLinks = () => {
+    const months = monthsBetween(formatDate(startDate), formatDate(endDate));
+    const urls = months.map((ym) => `${GLOBUS_DATA_BASE}/${socialGroup}/RC_${ym}.csv`);
+    setFullFiles({ category: socialGroup, months, urls, totalBytes: null });
+    // Best-effort: sum CSV sizes from the published manifest so users can see how
+    // big the pull is before they start. Failure just leaves the size hidden.
+    axios.get("/direct-download/manifest.json")
+      .then(({ data }) => {
+        const want = new Set(months.map((ym) => `${socialGroup}/RC_${ym}.csv`));
+        let total = 0;
+        for (const r of data) {
+          if (r.format === "csv" && want.has(r.rel_path)) total += r.size_bytes || 0;
+        }
+        setFullFiles((prev) => (prev && prev.category === socialGroup
+          ? { ...prev, totalBytes: total } : prev));
+      })
+      .catch(() => { /* size is optional */ });
+  };
+
+  // Download the Globus URL list as isaac_urls.txt (for wget -i / aria2c -i).
+  const downloadUrlList = () => {
+    if (!fullFiles) return;
+    const blob = new Blob([fullFiles.urls.join("\n") + "\n"], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "isaac_urls.txt"; a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleSample = async () => {
@@ -224,6 +299,14 @@ function App() {
         });
         return;
       }
+    }
+
+    // Blank document count = whole monthly files, not a sample. Serve them as
+    // direct Globus links (off-VM); no backend call, no server-side bundling.
+    if (!numDocs) {
+      resetProgress();
+      buildFullFileLinks();
+      return;
     }
 
     setLoading(true);
@@ -337,35 +420,11 @@ function App() {
       `} />
 
       <Box sx={{ flexGrow: 1, backgroundColor: "background.default", minHeight: "100vh" }}>
-        <AppBar
-          position="static"
-          elevation={0}
-          sx={{ bgcolor: "#E1F4FF", color: "text.primary", borderRadius: BR_ONLY }}
-        >
-          <Toolbar sx={{ justifyContent: "space-between" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box component="img" src={LOGO_MARK} alt="ISAAC logo" sx={{ height: 28, width: "auto" }} />
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  fontFamily: HEADLINE_FF,
-                  letterSpacing: 0.5,
-                  textTransform: "uppercase"
-                }}
-              >
-                {UI_TEXT?.appTitle ?? "ISAAC Reddit Sampler"}
-              </Typography>
-            </Box>
-            <Box>
-              <Button color="inherit" onClick={() => setPage("home")}>Home</Button>
-              <Button color="inherit" onClick={() => setPage("issue")}>
-                {UI_TEXT?.issueTitle ?? "Report Issue"}
-              </Button>
-              <Button color="inherit" onClick={handleLogout}>Logout</Button>
-            </Box>
-          </Toolbar>
-        </AppBar>
+        <IsaacAppBar
+          onHome={() => setPage("home")}
+          onIssue={() => setPage("issue")}
+          onLogout={handleLogout}
+        />
 
         <Container
           maxWidth="md"
@@ -406,7 +465,7 @@ function App() {
                   }}
                   dangerouslySetInnerHTML={html(
                     UI_TEXT?.homeSubtitle ??
-                      "Select a social group and time period to retrieve a random sample of Reddit posts in ZIP format."
+                      "Select a social group and time period to retrieve a reproducible random sample of Reddit posts as a CSV file."
                   )}
                 />
 
@@ -571,8 +630,67 @@ function App() {
                         color="success"
                         sx={{ ml: 0.5 }}
                       >
-                        {UI_TEXT?.downloadZip ?? "Download ZIP"}
+                        {UI_TEXT?.downloadSample ?? "Download CSV"}
                       </Button>
+                    </Alert>
+                  </Grid>
+                )}
+
+                {fullFiles && (
+                  <Grid item>
+                    <Alert severity="info" icon={false} sx={{ borderRadius: BR_ONLY }}>
+                      <Stack spacing={1.25}>
+                        <Typography variant="h6" sx={{ m: 0 }}>
+                          {UI_TEXT?.fullFiles?.heading ?? "Whole monthly files — direct download"}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>{fullFiles.urls.length}</strong>{" "}
+                          monthly CSV file{fullFiles.urls.length === 1 ? "" : "s"} for{" "}
+                          <strong>{fullFiles.category}</strong>, {fullFiles.months[0]} – {fullFiles.months[fullFiles.months.length - 1]}
+                          {fullFiles.totalBytes != null ? <> · ~<strong>{prettyBytes(fullFiles.totalBytes)}</strong> total</> : null}.
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {UI_TEXT?.fullFiles?.servedNote ?? "These files download directly from our Globus storage, not through this website."}
+                        </Typography>
+
+                        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+                          <Button component="a" href={globusFolderLink(fullFiles.category)} target="_blank" rel="noreferrer"
+                                  variant="contained" sx={{ borderRadius: BR_ONLY }}>
+                            {UI_TEXT?.fullFiles?.openInGlobus ?? "Browse & download in Globus"}
+                          </Button>
+                          <Button onClick={downloadUrlList} variant="outlined" sx={{ borderRadius: BR_ONLY }}>
+                            {UI_TEXT?.fullFiles?.downloadList ?? "Download file list (isaac_urls.txt)"}
+                          </Button>
+                        </Box>
+
+                        <Typography variant="body2" color="text.secondary">
+                          {UI_TEXT?.fullFiles?.bulkNote ?? "To download several files at once without writing code, open the folder in Globus, install the free Globus Connect Personal app once, then drag-and-drop the files to your computer."}{" "}
+                          <a href={UI_TEXT?.fullFiles?.connectAppUrl ?? "https://www.globus.org/globus-connect-personal"}
+                             target="_blank" rel="noreferrer" style={{ color: "#318CE7", whiteSpace: "nowrap" }}>
+                            {UI_TEXT?.fullFiles?.connectAppLabel ?? "Get Globus Connect Personal"} →
+                          </a>
+                        </Typography>
+
+                        {fullFiles.urls.length > FULL_FILES_LINKS_MAX ? (
+                          <Typography variant="body2" color="text.secondary">
+                            {UI_TEXT?.fullFiles?.cliNote ?? "Prefer the command line? The Direct Download tab has wget / aria2c recipes that use the file list above."}
+                          </Typography>
+                        ) : (
+                          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                            {fullFiles.urls.map((u) => (
+                              <a key={u} href={u} style={{ color: "#318CE7", wordBreak: "break-all" }}>
+                                {u.split("/").slice(-2).join("/")}
+                              </a>
+                            ))}
+                          </Box>
+                        )}
+
+                        {UI_TEXT?.fullFiles?.excelNote ? (
+                          <Typography variant="caption" color="text.secondary">
+                            {UI_TEXT.fullFiles.excelNote}
+                          </Typography>
+                        ) : null}
+                      </Stack>
                     </Alert>
                   </Grid>
                 )}
@@ -665,6 +783,339 @@ function App() {
         </Snackbar>
       </Box>
     </ThemeProvider>
+  );
+}
+
+// ——— Shared header (used by the main app AND the public doc routes) ———
+function IsaacAppBar({ onHome, onIssue, onLogout }) {
+  return (
+    <AppBar
+      position="static"
+      elevation={0}
+      sx={{ bgcolor: "#E1F4FF", color: "text.primary", borderRadius: BR_ONLY }}
+    >
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box component="img" src={LOGO_MARK} alt="ISAAC logo" sx={{ height: 28, width: "auto" }} />
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 700, fontFamily: HEADLINE_FF, letterSpacing: 0.5, textTransform: "uppercase" }}
+          >
+            {UI_TEXT?.appTitle ?? "ISAAC Reddit Sampler"}
+          </Typography>
+        </Box>
+        <Box>
+          <Button color="inherit" onClick={onHome}>Home</Button>
+          <Button color="inherit" onClick={onIssue}>{UI_TEXT?.issueTitle ?? "Report Issue"}</Button>
+          <Button color="inherit" href="/direct-download/">Direct Download</Button>
+          <Button color="inherit" href="/query/">Query Playground</Button>
+          <Button color="inherit" onClick={onLogout}>Logout</Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+}
+
+const FONT_GLOBALS = `
+  @font-face {
+    font-family: 'OctoberCompressedDevanagari';
+    src: url('/fonts/OctoberCompressedDevanagari.woff2') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  body { font-family: "IBM Plex Sans Devanagari","IBM Plex Sans",Roboto,"Helvetica Neue",Arial,sans-serif; }
+`;
+
+// Styling for the doc/query page bodies (injected as HTML under the shared header)
+const DOC_CSS = `
+  .isaac-doc{max-width:880px;margin:0 auto;color:#2D2D2D;line-height:1.65;}
+  .isaac-doc .hero{background:#318CE7;color:#fff;border-radius:${BR_ONLY};padding:26px 30px;margin:8px 0 28px;}
+  .isaac-doc .hero h1{font-family:${HEADLINE_FF};font-weight:700;text-transform:uppercase;letter-spacing:.5px;line-height:1.05;margin:0 0 10px;font-size:2rem;}
+  .isaac-doc .hero p{margin:0;opacity:.97;}
+  .isaac-doc .hero a{color:#fff;text-decoration:underline;}
+  .isaac-doc h2{font-family:${HEADLINE_FF};font-weight:700;font-size:1.35rem;margin:36px 0 12px;padding-top:14px;border-top:1px solid #e4e8ee;}
+  .isaac-doc h3{font-family:${HEADLINE_FF};font-weight:700;font-size:1.08rem;margin:24px 0 8px;}
+  .isaac-doc a{color:#318CE7;}
+  .isaac-doc code{background:#eef2f7;color:#1c3d5a;padding:2px 6px;border-radius:6px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .isaac-doc pre{background:#f6f8fb;border:1px solid #e4e8ee;border-radius:${BR_ONLY};padding:15px 17px;overflow-x:auto;font-size:.85rem;line-height:1.5;}
+  .isaac-doc pre code{background:none;color:#243b53;padding:0;}
+  .isaac-doc table{border-collapse:collapse;width:100%;margin:8px 0;font-size:.9rem;}
+  .isaac-doc th,.isaac-doc td{text-align:left;padding:8px 10px;border-bottom:1px solid #e4e8ee;}
+  .isaac-doc th{color:#5b6470;font-weight:600;}
+  .isaac-doc td.num,.isaac-doc th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .isaac-doc .muted{color:#5b6470;font-size:.9rem;}
+  .isaac-doc .pill{display:inline-block;background:#eef3f9;border:1px solid #e4e8ee;border-radius:6px;padding:1px 7px;margin:0 2px;font-size:.82em;}
+  .isaac-doc .note{background:#eaf3fd;border-left:3px solid #318CE7;padding:12px 16px;border-radius:0 12px 12px 0;margin:14px 0;}
+  .isaac-doc .examples{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;}
+  .isaac-doc .examples button{background:#eef3f9;color:#1c3d5a;border:1px solid #e4e8ee;border-radius:${BR_ONLY};padding:6px 11px;font-size:.85rem;cursor:pointer;}
+  .isaac-doc .examples button:hover{border-color:#318CE7;}
+  .isaac-doc textarea{width:100%;min-height:150px;background:#f6f8fb;color:#243b53;border:1px solid #e4e8ee;border-radius:${BR_ONLY};padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem;line-height:1.5;resize:vertical;}
+  .isaac-doc .runbar{display:flex;align-items:center;gap:14px;margin:12px 0;flex-wrap:wrap;}
+  .isaac-doc #run{background:#318CE7;color:#fff;border:0;border-radius:${BR_ONLY};padding:10px 22px;font-size:.95rem;font-weight:600;cursor:pointer;}
+  .isaac-doc #run:disabled{background:#c9d4e2;color:#fff;cursor:default;}
+  .isaac-doc #export{background:#fff;color:#318CE7;border:1px solid #318CE7;border-radius:${BR_ONLY};padding:10px 18px;font-size:.9rem;font-weight:600;cursor:pointer;}
+  .isaac-doc #export:disabled{background:#fff;color:#c9d4e2;border-color:#e4e8ee;cursor:default;}
+  .isaac-doc .helper{background:#f6f8fb;border:1px solid #e4e8ee;border-radius:${BR_ONLY};padding:14px 16px;margin:12px 0;}
+  .isaac-doc .helper .groups{display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:12px;}
+  .isaac-doc .helper .groups label{display:inline-flex;align-items:center;gap:5px;font-size:.9rem;color:#243b53;}
+  .isaac-doc .helper .range{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;}
+  .isaac-doc .helper .range label{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;color:#5b6470;}
+  .isaac-doc .helper input[type=month]{background:#fff;color:#243b53;border:1px solid #e4e8ee;border-radius:8px;padding:6px 8px;font-size:.88rem;font-family:inherit;}
+  .isaac-doc .helper #hgen{background:#eef3f9;color:#1c3d5a;border:1px solid #318CE7;border-radius:${BR_ONLY};padding:7px 14px;font-size:.88rem;font-weight:600;cursor:pointer;}
+  .isaac-doc .helper #hinfo{margin:10px 0 0;}
+  .isaac-doc .helper #hinfo.err{color:#c0392b;}
+  .isaac-doc .status{font-size:.9rem;color:#5b6470;}
+  .isaac-doc .status.ok{color:#1e7a44;} .isaac-doc .status.err{color:#c0392b;}
+  .isaac-doc .results{margin-top:18px;overflow-x:auto;}
+  .isaac-doc .results th{position:sticky;top:0;background:#fff;}
+  .isaac-doc .results th,.isaac-doc .results td{max-width:520px;overflow:hidden;text-overflow:ellipsis;vertical-align:top;}
+`;
+
+function clearIsaacSession() {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.indexOf("sb-") === 0)
+      .forEach((k) => localStorage.removeItem(k));
+  } catch (e) { /* ignore */ }
+}
+
+// Theme + shared header wrapper for the public doc routes
+function DocPageShell({ children }) {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <GlobalStyles styles={FONT_GLOBALS} />
+      <GlobalStyles styles={DOC_CSS} />
+      <Box sx={{ backgroundColor: "background.default", minHeight: "100vh" }}>
+        <IsaacAppBar
+          onHome={() => { window.location.href = "/"; }}
+          onIssue={() => { window.location.href = "/#report-issue"; }}
+          onLogout={() => { clearIsaacSession(); window.location.href = "/"; }}
+        />
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          {children}
+        </Container>
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+function useHtmlPartial(url) {
+  const [body, setBody] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    fetch(url)
+      .then((r) => r.text())
+      .then((t) => { if (!cancelled) setBody(t); })
+      .catch(() => { if (!cancelled) setBody("<p>Failed to load page content.</p>"); });
+    return () => { cancelled = true; };
+  }, [url]);
+  return body;
+}
+
+function DirectDownloadPage() {
+  const body = useHtmlPartial("/pages/direct-download.html");
+  return (
+    <DocPageShell>
+      <div className="isaac-doc" dangerouslySetInnerHTML={{ __html: body }} />
+    </DocPageShell>
+  );
+}
+
+function QueryPlaygroundPage() {
+  const body = useHtmlPartial("/pages/query.html");
+  useEffect(() => {
+    if (!body) return;
+    let conn = null;
+    let disposed = false;
+    const DISPLAY_MAX = 10000;   // rows shown in the results table
+    const CSV_MAX = 100000;      // rows written to an exported CSV
+    const TEXT_SCAN_WARN_FILES = 6;  // warn when a full-text scan spans more than this many files
+    const DATA_BASE = "https://g-05a4b6.2d513.8443.data.globus.org";
+    const $ = (id) => document.getElementById(id);
+    const sqlEl = $("sql");
+    const runBtn = $("run");
+    const exportBtn = $("export");
+    const statusEl = $("status");
+    const resultsEl = $("results");
+    if (!sqlEl) return;
+    let lastFields = null;
+    let lastRows = null;
+    const setStatus = (m, k = "") => { if (statusEl) { statusEl.textContent = m; statusEl.className = "status " + k; } };
+    const fmt = (v) => (v === null || v === undefined) ? "" : (typeof v === "bigint" ? v.toString() : String(v));
+    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    function renderTable(table) {
+      const fields = table.schema.fields.map((f) => f.name);
+      const rows = table.toArray();
+      lastFields = fields;
+      lastRows = rows;
+      let h = "<table><thead><tr>" + fields.map((f) => "<th>" + esc(f) + "</th>").join("") + "</tr></thead><tbody>";
+      for (const r of rows.slice(0, DISPLAY_MAX)) {
+        h += "<tr>" + fields.map((f) => "<td>" + esc(fmt(r[f])) + "</td>").join("") + "</tr>";
+      }
+      h += "</tbody></table>";
+      if (rows.length > DISPLAY_MAX) {
+        h += '<p class="muted">Showing first ' + DISPLAY_MAX.toLocaleString() + " of " + rows.length.toLocaleString() +
+             " rows. Use <strong>Export CSV</strong> for up to " + CSV_MAX.toLocaleString() + ".</p>";
+      }
+      if (resultsEl) resultsEl.innerHTML = h;
+      if (exportBtn) exportBtn.disabled = rows.length === 0;
+      return rows.length;
+    }
+    // Warn before a query that scans the full `text` column across many monthly files.
+    function shouldWarnTextScan(sql) {
+      const referencesText = /\btext\b/i.test(sql);
+      const fileCount = (sql.match(/\.parquet/gi) || []).length;
+      return referencesText && fileCount > TEXT_SCAN_WARN_FILES;
+    }
+    async function run() {
+      if (!conn) return;
+      const sql = sqlEl.value;
+      if (shouldWarnTextScan(sql)) {
+        const ok = window.confirm(
+          "This query reads the full \"text\" column across many monthly files. That can transfer a lot of " +
+          "data and may exhaust this browser tab's memory.\n\n" +
+          "Consider aggregating, adding filters, or using the Python package / direct downloads for large " +
+          "extractions.\n\nRun anyway?"
+        );
+        if (!ok) { setStatus("Cancelled.", ""); return; }
+      }
+      if (runBtn) runBtn.disabled = true;
+      if (exportBtn) exportBtn.disabled = true;
+      if (resultsEl) resultsEl.innerHTML = "";
+      lastFields = null; lastRows = null;
+      setStatus("Running…");
+      const t0 = performance.now();
+      try {
+        const res = await conn.query(sql);
+        const n = renderTable(res);
+        setStatus(n + " row(s) · " + ((performance.now() - t0) / 1000).toFixed(1) + "s", "ok");
+      } catch (e) {
+        setStatus("Error: " + (e && e.message ? e.message : e), "err");
+      } finally {
+        if (runBtn) runBtn.disabled = false;
+      }
+    }
+    // Export the last result as CSV (up to CSV_MAX rows), downloaded from the browser.
+    function exportCsv() {
+      if (!lastFields || !lastRows || !lastRows.length) return;
+      const cell = (v) => {
+        const s = fmt(v);
+        return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const n = Math.min(lastRows.length, CSV_MAX);
+      const lines = [lastFields.map(cell).join(",")];
+      for (let i = 0; i < n; i++) {
+        const r = lastRows[i];
+        lines.push(lastFields.map((f) => cell(r[f])).join(","));
+      }
+      const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "isaac_query.csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      const truncated = lastRows.length > CSV_MAX;
+      setStatus("Exported " + n.toLocaleString() + " row(s)" +
+        (truncated ? " (capped at " + CSV_MAX.toLocaleString() + " of " + lastRows.length.toLocaleString() + ")" : "") +
+        " to isaac_query.csv", "ok");
+    }
+    // File-list helper: build a read_parquet([...]) query with a social_group column.
+    function pad2(n) { return (n < 10 ? "0" : "") + n; }
+    function monthsBetween(start, end) {
+      const [sy, sm] = start.split("-").map(Number);
+      const [ey, em] = end.split("-").map(Number);
+      const out = [];
+      let y = sy, m = sm;
+      while (y < ey || (y === ey && m <= em)) {
+        out.push(y + "-" + pad2(m));
+        m += 1; if (m > 12) { m = 1; y += 1; }
+      }
+      return out;
+    }
+    function buildFileList() {
+      const info = $("hinfo");
+      const setInfo = (m, k = "") => { if (info) { info.innerHTML = m; info.className = "muted" + (k ? " " + k : ""); } };
+      const groups = Array.from(document.querySelectorAll(".hg")).filter((c) => c.checked).map((c) => c.value);
+      const startEl = $("hstart"), endEl = $("hend");
+      if (!groups.length) { setInfo("Select at least one social group.", "err"); return; }
+      let start = startEl ? startEl.value : "", end = endEl ? endEl.value : "";
+      if (!/^\d{4}-\d{2}$/.test(start) || !/^\d{4}-\d{2}$/.test(end)) { setInfo("Choose a valid month range.", "err"); return; }
+      if (start > end) { const t = start; start = end; end = t; }
+      if (start < "2007-01") start = "2007-01";
+      if (end > "2023-12") end = "2023-12";
+      const months = monthsBetween(start, end);
+      const urls = [];
+      for (const g of groups) for (const ym of months) urls.push(DATA_BASE + "/" + g + "/RC_" + ym + ".parquet");
+      const list = urls.map((u) => "  '" + u + "'").join(",\n");
+      const sql =
+        "SELECT\n" +
+        "  regexp_extract(filename, '/([^/]+)/RC_', 1) AS social_group,\n" +
+        "  count(*) AS n, round(avg(score), 1) AS avg_score\n" +
+        "FROM read_parquet([\n" + list + "], filename = true)\n" +
+        "GROUP BY social_group\n" +
+        "ORDER BY social_group;";
+      sqlEl.value = sql;
+      lastFields = null; lastRows = null;
+      if (exportBtn) exportBtn.disabled = true;
+      if (resultsEl) resultsEl.innerHTML = "";
+      setInfo(urls.length + " file(s) — " + groups.length + " group(s) × " + months.length +
+        " month(s). Inserted below; edit the SELECT, then Run.");
+    }
+    async function init() {
+      try {
+        const duckdb = await import(/* webpackIgnore: true */ "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.32.0/+esm");
+        const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
+        const workerUrl = URL.createObjectURL(new Blob(['importScripts("' + bundle.mainWorker + '");'], { type: "text/javascript" }));
+        const worker = new Worker(workerUrl);
+        const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(), worker);
+        await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+        URL.revokeObjectURL(workerUrl);
+        if (disposed) return;
+        conn = await db.connect();
+        if (runBtn) runBtn.disabled = false;
+        setStatus("Ready — edit the query and press Run (Ctrl/Cmd-Enter).", "ok");
+      } catch (e) {
+        setStatus("Failed to load DuckDB: " + (e && e.message ? e.message : e), "err");
+      }
+    }
+    const onRun = () => run();
+    const onExport = () => exportCsv();
+    const onGen = () => buildFileList();
+    const onKey = (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); };
+    if (runBtn) runBtn.addEventListener("click", onRun);
+    if (exportBtn) exportBtn.addEventListener("click", onExport);
+    const genBtn = $("hgen");
+    if (genBtn) genBtn.addEventListener("click", onGen);
+    sqlEl.addEventListener("keydown", onKey);
+    const exs = Array.from(document.querySelectorAll("[data-q]")).map((b) => {
+      const handler = () => { sqlEl.value = b.getAttribute("data-q"); };
+      b.addEventListener("click", handler);
+      return [b, handler];
+    });
+    init();
+    return () => {
+      disposed = true;
+      if (runBtn) runBtn.removeEventListener("click", onRun);
+      if (exportBtn) exportBtn.removeEventListener("click", onExport);
+      if (genBtn) genBtn.removeEventListener("click", onGen);
+      sqlEl.removeEventListener("keydown", onKey);
+      exs.forEach(([b, handler]) => b.removeEventListener("click", handler));
+    };
+  }, [body]);
+  return (
+    <DocPageShell>
+      <div className="isaac-doc" dangerouslySetInnerHTML={{ __html: body }} />
+    </DocPageShell>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/direct-download" element={<DirectDownloadPage />} />
+      <Route path="/query" element={<QueryPlaygroundPage />} />
+      <Route path="*" element={<MainApp />} />
+    </Routes>
   );
 }
 

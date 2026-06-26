@@ -1,0 +1,189 @@
+<section class="hero">
+    <h1>Direct Download</h1>
+    <p>Programmatic, scriptable access to the curated <strong>ISAAC</strong> (Illinois Social Attitudes
+       Aggregate Corpus) Reddit data files. If you just want to sample and filter without writing code,
+       use the <a href="/">web app</a> instead. This page is for pulling whole monthly files directly
+       into your own scripts and pipelines.</p>
+  </section>
+
+  <h2>URL scheme</h2>
+  <p>Every file is a plain <code>GET</code> over HTTPS. No authentication, no query parameters:</p>
+  <pre><code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;category&gt;/RC_&lt;YYYY-MM&gt;.csv</code></pre>
+  <ul>
+    <li><code>&lt;category&gt;</code> — one of
+        <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span><span class="pill">skin_tone</span><span class="pill">weight</span></li>
+    <li><code>&lt;YYYY-MM&gt;</code> — month, e.g. <code>2015-03</code> (zero-padded).</li>
+    <li>Files are named <code>RC_</code> + the month (Reddit Comments).</li>
+  </ul>
+  <p>Example: <a href="https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv"><code>https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv</code></a></p>
+  <p class="muted">Every month is also available as Apache <strong>Parquet</strong> at the same path with a
+     <code>.parquet</code> extension (e.g. <code>https://g-05a4b6.2d513.8443.data.globus.org/age/RC_2015-03.parquet</code>).
+     <strong>Parquet is recommended for scripting</strong> — it supports column selection and partial
+     reads, so you transfer far less than the full file.</p>
+
+  <h2>What's available</h2>
+  <table>
+    <thead><tr><th>Category</th><th>Months</th><th>Date range</th><th>Formats</th><th class="num">Size</th></tr></thead>
+    <tbody>
+      <tr><td>ability</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">38.9 GB</td></tr>
+      <tr><td>age</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">383.5 GB</td></tr>
+      <tr><td>race</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">116.8 GB</td></tr>
+      <tr><td>sexuality</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">106.5 GB</td></tr>
+      <tr><td>skin_tone</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">70.6 GB</td></tr>
+      <tr><td>weight</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">44.6 GB</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Every category has both CSV and Parquet for all 204 months (2007-01 through 2023-12). The
+     <a href="/direct-download/manifest.json">manifest</a> is always the authoritative list of what exists.</p>
+  <p class="muted">Individual files range from tens of KB to several hundred MB — check
+     <code>size_bytes</code> in the manifest before bulk-pulling. Downloads support
+     HTTP <strong>Range</strong> requests, so large transfers can be resumed.</p>
+
+  <h3>File schema (current columns)</h3>
+  <pre><code>id, parent id, text, author, time, subreddit, score, matched_patterns</code></pre>
+  <p class="muted">See the
+     <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md">variable list</a>
+     for full column definitions. These files are the current pre-labeling release; the forthcoming labeled
+     release will add per-post fields for moralization, sentiment (Stanza/VADER/TextBlob), generalization,
+     emotion, and estimated user location.</p>
+
+  <h2>Machine-readable index</h2>
+  <p>Rather than hard-coding filenames, enumerate what's available from the manifest:</p>
+  <ul>
+    <li><a href="/direct-download/manifest.json"><code>manifest.json</code></a> — array of
+        <code>{category, year, month, format, filename, rel_path, size_bytes, num_rows, url}</code></li>
+    <li><a href="/direct-download/files.csv"><code>files.csv</code></a> — the same data as a flat CSV</li>
+  </ul>
+
+  <h2>Python loader (<code>isaac-data</code>)</h2>
+  <p>The easiest way to use the corpus from Python. It reads the manifest above as a catalog and, for
+     Parquet, transfers only the columns you ask for (HTTP range reads). Source on the
+     <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes">project repository</a>.</p>
+  <pre><code># install (PyPI once published):
+pip install isaac-data
+# or from the repo:
+pip install "git+https://github.com/BabakHemmatian/Illinois_Social_Attitudes.git#subdirectory=isaac-data-loader"</code></pre>
+  <pre><code>import isaac_data as isaac
+
+isaac.files("race", "2018-01", "2018-12")          # what's available (DataFrame)
+
+# load one month, only two columns (transfers just those columns):
+df = isaac.load("race", "2018-03", "2018-03", columns=["text", "score"])
+
+# stratified sample: 1000 rows total across the 12 months (reproducible):
+sample = isaac.load("age", "2015-01", "2015-12", columns=["text"], n=1000, seed=0)
+
+# bulk download for offline use (resumable, cached):
+isaac.download("weight", "2020-01", "2020-12", dest="./weight2020")</code></pre>
+  <p class="muted">CLI: <code>isaac-data ls -c race -s 2018-01 -e 2018-12</code> ·
+     <code>isaac-data download -c age -s 2015-01 -e 2015-12 -d ./age</code></p>
+
+  <h2>Examples</h2>
+  <p class="muted">Prefer the loader above for Python. These raw HTTP examples work in any language.</p>
+
+  <h3>Download one file</h3>
+  <pre><code># curl — works on macOS, Linux, and Windows 10+ (-O keeps the remote name, -L follows redirects)
+curl -LO https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv
+
+# resume an interrupted download
+curl -C - -LO https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv
+
+# GNU wget — Linux / WSL / Git Bash only (not preinstalled on macOS; "wget" in Windows
+# PowerShell is an alias for a different command and will not behave like this)
+wget https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv</code></pre>
+
+  <h3>Load straight into pandas (no local copy)</h3>
+  <pre><code>import pandas as pd
+
+url = "https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv"
+df = pd.read_csv(url)
+print(df.shape, list(df.columns))
+
+# Parquet (available for every category and month):
+df = pd.read_parquet("https://g-05a4b6.2d513.8443.data.globus.org/sexuality/RC_2010-01.parquet")</code></pre>
+
+  <h3>Download many files (a URL list)</h3>
+  <p>Save the file URLs you want to <code>isaac_urls.txt</code>, one per line — the
+     <a href="/">Sampler</a> produces this list for a no-code selection, or build it from the
+     <a href="/direct-download/manifest.json">manifest</a> or the <code>isaac-data</code> loader
+     (<code>isaac.files(...).url.tolist()</code>). Then fetch them all:</p>
+  <pre><code># curl + xargs — no install on macOS / Linux / WSL / Git Bash; 8 downloads in parallel
+xargs -P8 -n1 curl -O &lt; isaac_urls.txt
+
+# aria2c — fastest: parallel + automatic resume (install via brew / apt / choco)
+aria2c -j8 -i isaac_urls.txt
+
+# Windows PowerShell (native) — note: PowerShell's "wget" is NOT GNU wget
+Get-Content isaac_urls.txt | ForEach-Object { Invoke-WebRequest $_ -OutFile (Split-Path $_ -Leaf) }</code></pre>
+  <p class="muted">Every option pulls straight from the Globus storage endpoint, in parallel where
+     supported — nothing routes through this website.</p>
+
+  <h3>Select files from the manifest</h3>
+  <pre><code>import requests
+
+manifest = requests.get(
+    "https://isaac.psychology.illinois.edu/direct-download/manifest.json"
+).json()
+
+# e.g. all CSVs for 'race' in 2018-2020
+wanted = [f for f in manifest
+          if f["category"] == "race"
+          and f["format"] == "csv"
+          and 2018 &lt;= f["year"] &lt;= 2020]
+
+for f in wanted:
+    print(f["url"], f["size_bytes"])
+    # r = requests.get(f["url"]); open(f["filename"], "wb").write(r.content)</code></pre>
+
+  <h2>Query with SQL (DuckDB)</h2>
+  <p>DuckDB can query the Parquet <strong>directly over HTTPS</strong>, reading only the columns and
+     row groups your query needs (range requests) — so a selective query transfers far less than the
+     file size. The query runs <strong>on your machine</strong>; nothing runs on our server.</p>
+  <p>Want to try SQL without installing anything? Use the
+     <a href="/query/"><strong>in-browser SQL playground</strong></a> — the same engine
+     (DuckDB-Wasm), running entirely in your browser tab.</p>
+  <pre><code>import duckdb
+
+# One month — aggregate without downloading the file:
+duckdb.sql("""
+  SELECT subreddit, count(*) AS n, avg(score) AS avg_score
+  FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet')
+  GROUP BY subreddit ORDER BY n DESC LIMIT 10
+""").show()</code></pre>
+  <p>For <strong>multiple months</strong>, pass an explicit list of URLs. (HTTP has no directory
+     listing, so wildcard globs like <code>RC_2018-*.parquet</code> do <em>not</em> work — build the
+     list from the <a href="/direct-download/manifest.json">manifest</a> or the
+     <a href="/direct-download/"><code>isaac-data</code></a> loader.)</p>
+  <pre><code>import duckdb
+
+base = "https://g-05a4b6.2d513.8443.data.globus.org/race"
+urls = [f"{base}/RC_2018-{m:02d}.parquet" for m in range(1, 13)]
+
+duckdb.sql("SELECT count(*) AS n FROM read_parquet($urls) WHERE score > 100",
+           params={"urls": urls}).show()
+
+# or get URLs straight from the loader:
+# import isaac_data as isaac
+# urls = isaac.files("race", "2018-01", "2018-12").url.tolist()</code></pre>
+  <pre><code># Command line (single file):
+duckdb -c "SELECT author, score FROM \
+  read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/age/RC_2015-03.parquet') \
+  WHERE score > 500 LIMIT 20"</code></pre>
+  <p class="muted">DuckDB auto-loads the <code>httpfs</code> extension on first use of an
+     <code>https://</code> path; if an older build doesn't, run <code>INSTALL httpfs; LOAD httpfs;</code>
+     first. Keep an eye on <code>LIMIT</code>/filters for very large multi-month scans.</p>
+
+  <h2>Notes &amp; terms</h2>
+  <div class="note">
+    These files are served <strong>read-only</strong>. Only <code>GET</code> and <code>HEAD</code>
+    are accepted — the data cannot be modified through this endpoint.
+  </div>
+  <ul>
+    <li>Please download considerately — pull the months you need rather than mirroring the whole
+        ~668&nbsp;GB corpus in tight parallel loops.</li>
+    <li>The data and categories match the corpus served by the <a href="/">ISAAC web app</a>.</li>
+    <li>If you use ISAAC in published work, please cite the project and acknowledge the dataset — see the
+        <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes">main ISAAC repository</a>,
+        whose README includes citation details.</li>
+    <li>Problems or questions? Use the <strong>Report an Issue</strong> option in the web app.</li>
+  </ul>

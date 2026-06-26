@@ -42,6 +42,11 @@ function Auth({ supabase }) {
   const [loading, setLoading] = useState(false);
   const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  // Email code verification (scanner-proof signup confirmation)
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -123,6 +128,14 @@ function Auth({ supabase }) {
     return () => window.clearInterval(timer);
   }, [resetCooldownSeconds]);
 
+  useEffect(() => {
+    if (resendCooldownSeconds <= 0) return undefined;
+    const timer = window.setInterval(() => {
+      setResendCooldownSeconds(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendCooldownSeconds]);
+
   const getFriendlyResetError = (err) => {
     const raw = (err?.message || "").toLowerCase();
     if (
@@ -173,12 +186,16 @@ function Auth({ supabase }) {
       if (result.error) {
         console.error('Supabase auth error:', result.error);
         setError(result.error.message || 'Authentication failed. Please check your credentials.');
+      } else if (mode === 'signup') {
+        // Move into the 6-digit code step instead of relying on a magic link
+        // (email security scanners pre-fetch links and burn the one-time token).
+        setPendingEmail(email);
+        setVerificationCode('');
+        setAwaitingCode(true);
+        setResendCooldownSeconds(60);
+        setSuccess(UI_TEXT.auth.signupCodeSent);
       } else {
-        setSuccess(
-          mode === 'login'
-            ? `${UI_TEXT.auth.login} successful!`
-            : `${UI_TEXT.auth.signup} successful! Check your email for confirmation.`
-        );
+        setSuccess(`${UI_TEXT.auth.login} successful!`);
       }
     } catch (err) {
       console.error('Auth request failed:', err);
@@ -187,6 +204,74 @@ function Auth({ supabase }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerifyCode = async () => {
+    setError(null); setSuccess(null);
+    const code = verificationCode.trim();
+    if (!/^\d{6}$/.test(code)) {
+      setError(UI_TEXT.auth.verifyCodeRequired);
+      return;
+    }
+    if (!supabase) {
+      setError('Authentication system not ready. Please refresh the page.');
+      return;
+    }
+    setLoading(true);
+    try {
+      // Verifying the OTP code directly establishes a session — no link click,
+      // so passive email scanners can't consume it.
+      const { error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token: code,
+        type: 'signup',
+      });
+      if (error) {
+        setError(error.message || 'That code is invalid or has expired. Request a new one.');
+      } else {
+        // onAuthStateChange in App.js picks up the new session and renders the app.
+        setSuccess(UI_TEXT.auth.verifySuccess);
+      }
+    } catch (err) {
+      setError(`Verification failed: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError(null); setSuccess(null);
+    if (!supabase || !pendingEmail) {
+      setError('Authentication system not ready. Please refresh the page.');
+      return;
+    }
+    if (resendCooldownSeconds > 0) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: pendingEmail,
+        options: { emailRedirectTo: `${getSafeRedirectOrigin()}/` },
+      });
+      if (error) {
+        setError(getFriendlyResetError(error));
+      } else {
+        setSuccess(UI_TEXT.auth.signupCodeSent);
+      }
+      setResendCooldownSeconds(60);
+    } catch (err) {
+      setError(getFriendlyResetError(err));
+      setResendCooldownSeconds(60);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelVerify = () => {
+    setError(null); setSuccess(null);
+    setAwaitingCode(false);
+    setPendingEmail('');
+    setVerificationCode('');
   };
 
   const handlePasswordResetEmail = async () => {
@@ -333,6 +418,54 @@ function Auth({ supabase }) {
     );
   }
 
+  // ---------- Email code verification view ----------
+  if (awaitingCode) {
+    const instruction = UI_TEXT.auth.verifyInstruction.replace('{email}', pendingEmail);
+    return (
+      <Container className="d-flex align-items-center justify-content-center vh-100 isaac-body">
+        <style>{fontCss}</style>
+        <Card className="p-4 shadow br-only" style={{ maxWidth: 420, width: '100%' }}>
+          <h3 className="text-center mb-3 isaac-heading">{UI_TEXT.auth.verifyTitle}</h3>
+          <p className="text-secondary small text-center" dangerouslySetInnerHTML={html(instruction)} />
+          {error && <Alert className="br-only" variant="danger">{error}</Alert>}
+          {success && <Alert className="br-only" variant="success">{success}</Alert>}
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>{UI_TEXT.auth.verifyCodeLabel}</Form.Label>
+              <Form.Control
+                className="br-only text-center"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="000000"
+                style={{ letterSpacing: '0.4em', fontSize: '1.25rem' }}
+                value={verificationCode}
+                onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+            </Form.Group>
+            <Button className="w-100 mb-2 br-only" onClick={handleVerifyCode} disabled={loading}>
+              {loading ? 'Verifying…' : UI_TEXT.auth.verifyButton}
+            </Button>
+            <Button
+              variant="link"
+              className="w-100 p-0 br-only"
+              onClick={handleResendCode}
+              disabled={loading || resendCooldownSeconds > 0}
+            >
+              {resendCooldownSeconds > 0
+                ? UI_TEXT.auth.verifyResendCooldown.replace('{seconds}', resendCooldownSeconds)
+                : UI_TEXT.auth.verifyResend}
+            </Button>
+            <Button variant="link" className="w-100 p-0 br-only text-muted" onClick={handleCancelVerify} disabled={loading}>
+              {UI_TEXT.auth.verifyBack}
+            </Button>
+          </Form>
+        </Card>
+      </Container>
+    );
+  }
+
   // ---------- Main auth view ----------
   return (
     <Container fluid className="vh-100 d-flex align-items-center justify-content-center bg-light isaac-body">
@@ -389,7 +522,7 @@ function Auth({ supabase }) {
               <ToggleButton
                 id="signup-btn"
                 value="signup"
-                variant="outline-secondary"
+                variant="outline-primary"
                 style={{
                   borderTopLeftRadius: '0px',
                   borderTopRightRadius: '12px',
@@ -439,7 +572,7 @@ function Auth({ supabase }) {
               )}
               <Button
                 onClick={handleAuth}
-                variant={mode === 'login' ? 'primary' : 'secondary'}
+                variant="primary"
                 className="w-100 mb-2 br-only"
                 disabled={loading || (mode === 'signup' && !termsAccepted)}
               >
