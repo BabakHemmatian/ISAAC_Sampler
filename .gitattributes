@@ -1,0 +1,11 @@
+# Normalize line endings: store all text files as LF in the repo, regardless of
+# the checkout platform. This stops Windows/CRLF working copies from showing
+# every file as "modified".
+* text=auto eol=lf
+
+# Common binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
