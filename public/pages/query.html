@@ -9,8 +9,10 @@
   </section>
 
   <p>Files are one Parquet per <strong>social group</strong> per <strong>month</strong>, addressed as
-     <code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;group&gt;/RC_&lt;YYYY-MM&gt;.parquet</code> —
-     groups <code>ability, age, race, sexuality, skin_tone, weight</code>; months
+     <code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;group&gt;/&lt;prefix&gt;&lt;YYYY-MM&gt;.parquet</code> —
+     groups <code>ability, age, race, sexuality, skin_tone, weight</code>; the prefix is
+     <code>ALL_</code> for <code>sexuality</code> (combined comments + submissions) and
+     <code>RC_</code> (comments only) for the other groups; months
      <code>2007-01</code> through <code>2023-12</code>. A single query can span months <em>and</em>
      groups by listing several files inside <code>read_parquet([...])</code>. For the columns you can
      <code>SELECT</code> and filter on, see the
@@ -58,7 +60,7 @@ WHERE score > 100;">High-score count</button>
 FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.parquet')
 USING SAMPLE 10 ROWS;">Random 10 posts</button>
     <button data-q="SELECT
-  regexp_extract(filename, '/([^/]+)/RC_', 1) AS social_group,
+  regexp_extract(filename, '/([^/]+)/(?:RC|RS|ALL)_', 1) AS social_group,
   count(*) AS n, round(avg(score),1) AS avg_score
 FROM read_parquet([
   'https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet',

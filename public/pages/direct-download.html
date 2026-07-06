@@ -8,12 +8,13 @@
 
   <h2>URL scheme</h2>
   <p>Every file is a plain <code>GET</code> over HTTPS. No authentication, no query parameters:</p>
-  <pre><code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;category&gt;/RC_&lt;YYYY-MM&gt;.csv</code></pre>
+  <pre><code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;category&gt;/&lt;prefix&gt;&lt;YYYY-MM&gt;.csv</code></pre>
   <ul>
     <li><code>&lt;category&gt;</code> — one of
         <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span><span class="pill">skin_tone</span><span class="pill">weight</span></li>
     <li><code>&lt;YYYY-MM&gt;</code> — month, e.g. <code>2015-03</code> (zero-padded).</li>
-    <li>Files are named <code>RC_</code> + the month (Reddit Comments).</li>
+    <li><code>&lt;prefix&gt;</code> — <code>ALL_</code> for <span class="pill">sexuality</span> (combined comments + submissions);
+        <code>RC_</code> (Reddit Comments only) for the other categories until their combined versions are published.</li>
   </ul>
   <p>Example: <a href="https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv"><code>https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv</code></a></p>
   <p class="muted">Every month is also available as Apache <strong>Parquet</strong> at the same path with a
@@ -100,7 +101,7 @@ df = pd.read_csv(url)
 print(df.shape, list(df.columns))
 
 # Parquet (available for every category and month):
-df = pd.read_parquet("https://g-05a4b6.2d513.8443.data.globus.org/sexuality/RC_2010-01.parquet")</code></pre>
+df = pd.read_parquet("https://g-05a4b6.2d513.8443.data.globus.org/sexuality/ALL_2010-01.parquet")</code></pre>
 
   <h3>Download many files (a URL list)</h3>
   <p>Save the file URLs you want to <code>isaac_urls.txt</code>, one per line — the
