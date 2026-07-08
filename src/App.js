@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Auth from "./Auth";
+import AuthAction from "./AuthAction";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebaseClient";
 import {
   Box, AppBar, Toolbar, Typography, Button, TextField, MenuItem,
   Grid, Snackbar, Alert, CircularProgress, Container, FormControl,
@@ -108,7 +111,6 @@ const theme = createTheme({
 });
 
 function MainApp() {
-  const [supabase, setSupabase] = useState(null);
   const [session, setSession] = useState(null);
   const [socialGroup, setSocialGroup] = useState("");
   const [startDate, setStartDate] = useState(null);
@@ -128,16 +130,6 @@ function MainApp() {
   const [issueLoading, setIssueLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [pollIntervalId, setPollIntervalId] = useState(null);
-  const searchParams = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash ? window.location.hash.slice(1) : "");
-  const isAuthRecoveryFlow =
-    window.location.pathname === "/update-password" ||
-    searchParams.get("type") === "recovery" ||
-    hashParams.get("type") === "recovery" ||
-    !!(hashParams.get("access_token") && hashParams.get("refresh_token"));
-  const isAuthCodeFlow = searchParams.has("code");
-  const forceAuthScreen = isAuthRecoveryFlow || isAuthCodeFlow;
-
   useEffect(() => {
     const pre1 = document.createElement("link");
     pre1.rel = "preconnect";
@@ -167,44 +159,6 @@ function MainApp() {
     }
   }, []);
 
-  // Create a Supabase client only so <Auth /> renders
-  useEffect(() => {
-    async function setupSupabase() {
-      try {
-        if (typeof fetch === "undefined") {
-          const { default: fetchPoly } = await import("cross-fetch");
-          global.fetch = fetchPoly; window.fetch = fetchPoly;
-        }
-        const { createClient } = await import("@supabase/supabase-js");
-        const supabaseUrl = "https://rfyavjpuqoepfkxhtzie.supabase.co";
-        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmeWF2anB1cW9lcGZreGh0emllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4Njg1NDYsImV4cCI6MjA3MzQ0NDU0Nn0.pnW2RgIQj0G-CbY3neYc7zciAHrOHxyF8U7edlrwj1U";
-        const client = createClient(supabaseUrl, supabaseAnonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-            flowType: 'pkce'
-          },
-          global: {
-            fetch: (url, options = {}) => {
-              return fetch(url, {
-                ...options,
-                headers: {
-                  ...options.headers,
-                },
-              });
-            }
-          }
-        });
-        setSupabase(client);
-      } catch (err) {
-        console.error("Failed to initialize Supabase client:", err);
-        setSupabase(null);
-      }
-    }
-    setupSupabase();
-  }, []);
-
   useEffect(() => {
     document.title = UI_TEXT?.appTitle ?? "ISSAC Sampler";
     const existing = document.querySelector("link[rel~='icon']");
@@ -214,22 +168,21 @@ function MainApp() {
     if (!existing) document.head.appendChild(link);
   }, []);
 
-  // Listen for auth state changes
+  // Firebase auth state. Only treat a user as logged in once their email is
+  // verified (parity with the old Supabase confirm-before-login behavior);
+  // unverified users fall through to <Auth />, which shows the verify screen.
   useEffect(() => {
-    if (!supabase) return;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setSession(user && user.emailVerified ? user : null);
     });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+    return unsubscribe;
+  }, []);
 
   const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Sign-out failed:", err);
     }
     setSession(null);
   };
@@ -391,7 +344,7 @@ function MainApp() {
     setIssueLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/report_issue`, {
-        email: session?.user?.email || "guest@local",
+        email: session?.email || "guest@local",
         description: issueDesc
       });
       setIssueDesc("");
@@ -402,9 +355,9 @@ function MainApp() {
     setIssueLoading(false);
   };
 
-  if (!session || forceAuthScreen) {
+  if (!session) {
     return (
-      <Auth supabase={supabase} />
+      <Auth />
     );
   }
 
@@ -1118,6 +1071,7 @@ function App() {
     <Routes>
       <Route path="/direct-download" element={<DirectDownloadPage />} />
       <Route path="/query" element={<QueryPlaygroundPage />} />
+      <Route path="/auth/action" element={<AuthAction />} />
       <Route path="*" element={<MainApp />} />
     </Routes>
   );

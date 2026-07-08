@@ -3,15 +3,20 @@ import {
   Container, Form, Button, ToggleButtonGroup, ToggleButton,
   Alert, Row, Col, Card
 } from 'react-bootstrap';
-import { useLocation } from 'react-router-dom';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signOut,
+} from 'firebase/auth';
+import { auth } from './firebaseClient';
+import { AUTH_FONT_CSS, useAuthFonts } from './authStyles';
 import { UI_TEXT } from './constant.ts';
 
 const LOGO_PRIMARY = "/ISAAC Logo 1.png"; // ensure this exists in /public
 
 const html = (s) => ({ __html: s ?? "" });
-
-// One place to control the radius value (for other usage)
-const BR_ONLY = "12px 12px 0 12px";
 
 const PROD_FALLBACK_ORIGIN = 'https://isaac.psychology.illinois.edu';
 
@@ -31,94 +36,66 @@ function getSafeRedirectOrigin() {
   return origin;
 }
 
-function Auth({ supabase }) {
+// Where Firebase should send the user AFTER they finish a verify/reset action.
+// Must be an authorized domain in the Firebase console.
+const actionCodeSettings = () => ({ url: `${getSafeRedirectOrigin()}/`, handleCodeInApp: false });
+
+// Record Terms-of-Use consent server-side (Firebase user profiles can't hold
+// arbitrary fields). Best-effort: a failure here must never block signup.
+async function recordTermsConsent(user) {
+  try {
+    await fetch('/record_consent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        terms_version: UI_TEXT.auth.termsVersion,
+        accepted_at: new Date().toISOString(),
+      }),
+    });
+  } catch (_) { /* consent logging is best-effort */ }
+}
+
+// Map Firebase auth error codes to friendly, non-enumerating messages.
+function friendlyAuthError(err) {
+  const code = err?.code || '';
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'That email address looks invalid.';
+    case 'auth/email-already-in-use':
+      return 'An account with that email already exists. Try logging in or resetting your password.';
+    case 'auth/weak-password':
+      return 'Password is too weak — use at least 6 characters.';
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'Incorrect email or password.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait about a minute and try again.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return err?.message || 'Authentication failed. Please try again.';
+  }
+}
+
+function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState('login');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  // Email code verification (scanner-proof signup confirmation)
-  const [awaitingCode, setAwaitingCode] = useState(false);
+  // Post-signup / unverified-login: user must click the emailed link (which
+  // logs them in from that tab). This screen is informational + resend.
+  const [awaitingVerify, setAwaitingVerify] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
 
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const hashParams = new URLSearchParams(location.hash ? location.hash.slice(1) : '');
-  const queryType = params.get('type');
-  const hashType = hashParams.get('type');
-  const isRecoveryFlow = queryType === 'recovery' || hashType === 'recovery';
-  const hasRecoveryCode = params.has('code') && isRecoveryFlow;
-  const hasRecoveryTokens = !!(hashParams.get('access_token') && hashParams.get('refresh_token') && isRecoveryFlow);
-  const isPasswordResetFlow = location.pathname === '/update-password' || hasRecoveryCode || hasRecoveryTokens;
-
-  // Load IBM Plex Sans Devanagari from Google Fonts
-  useEffect(() => {
-    const preconnect1 = document.createElement('link');
-    preconnect1.rel = 'preconnect';
-    preconnect1.href = 'https://fonts.googleapis.com';
-
-    const preconnect2 = document.createElement('link');
-    preconnect2.rel = 'preconnect';
-    preconnect2.href = 'https://fonts.gstatic.com';
-    preconnect2.crossOrigin = '';
-
-    const plexLink = document.createElement('link');
-    plexLink.rel = 'stylesheet';
-    plexLink.href =
-      'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Devanagari:wght@400;500;600;700&display=swap';
-
-    document.head.appendChild(preconnect1);
-    document.head.appendChild(preconnect2);
-    document.head.appendChild(plexLink);
-    return () => {
-      document.head.removeChild(preconnect1);
-      document.head.removeChild(preconnect2);
-      document.head.removeChild(plexLink);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (hasRecoveryCode && supabase) {
-      (async () => {
-        try {
-          const { error } = await supabase.auth.exchangeCodeForSession();
-          if (error) setError(UI_TEXT.auth.resetError);
-        } catch (err) {
-          setError(`Failed to verify reset session: ${err.message}`);
-        }
-      })();
-    }
-  }, [supabase, hasRecoveryCode]);
-
-  useEffect(() => {
-    if (!isPasswordResetFlow || !supabase) return;
-    const queryString = window.location.hash
-      ? window.location.hash.slice(1)
-      : window.location.search.slice(1);
-    const params = new URLSearchParams(queryString);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-
-    if (access_token && refresh_token) {
-      (async () => {
-        try {
-          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (error) setError(UI_TEXT.auth.resetError);
-        } catch (err) {
-          setError(`Failed to set session: ${err.message}`);
-        }
-      })();
-    } else if (location.pathname === '/update-password') {
-      setError(UI_TEXT.auth.resetInvalid);
-    }
-  }, [isPasswordResetFlow, supabase, location.pathname]);
+  useAuthFonts();
 
   useEffect(() => {
     if (resetCooldownSeconds <= 0) return undefined;
@@ -136,18 +113,6 @@ function Auth({ supabase }) {
     return () => window.clearInterval(timer);
   }, [resendCooldownSeconds]);
 
-  const getFriendlyResetError = (err) => {
-    const raw = (err?.message || "").toLowerCase();
-    if (
-      raw.includes("rate limit") ||
-      raw.includes("too many requests") ||
-      raw.includes("email rate limit exceeded")
-    ) {
-      return "Too many reset attempts. Please wait about a minute and try again.";
-    }
-    return err?.message || "Unable to send reset email right now. Please try again shortly.";
-  };
-
   const handleAuth = async () => {
     setError(null); setSuccess(null);
     if (!email || !password) {
@@ -158,129 +123,68 @@ function Auth({ supabase }) {
       setError(UI_TEXT.auth.termsRequired);
       return;
     }
-    if (!supabase) {
-      setError('Authentication system not ready. Please refresh the page.');
-      return;
-    }
     setLoading(true);
     try {
-      let result;
       if (mode === 'login') {
-        result = await supabase.auth.signInWithPassword({ email, password });
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        if (!cred.user.emailVerified) {
+          // Parity with the old flow: unverified users can't enter the app.
+          // Keep them signed in so "resend" works, and show the verify screen.
+          setPendingEmail(email);
+          setAwaitingVerify(true);
+          setSuccess(UI_TEXT.auth.loginUnverified);
+        } else {
+          // onAuthStateChanged in App.js picks up the verified session.
+          setSuccess(`${UI_TEXT.auth.login} successful!`);
+        }
       } else {
-        result = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${getSafeRedirectOrigin()}/`,
-            // Record proof of Terms of Use consent on the user's metadata.
-            // termsAccepted is guaranteed true here (validated above).
-            data: {
-              terms_accepted: true,
-              terms_accepted_at: new Date().toISOString(),
-              terms_version: UI_TEXT.auth.termsVersion,
-            },
-          },
-        });
-      }
-      if (result.error) {
-        console.error('Supabase auth error:', result.error);
-        setError(result.error.message || 'Authentication failed. Please check your credentials.');
-      } else if (mode === 'signup') {
-        // Move into the 6-digit code step instead of relying on a magic link
-        // (email security scanners pre-fetch links and burn the one-time token).
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        // Legally meaningful; fire-and-forget so it can't block the flow.
+        recordTermsConsent(cred.user);
+        await sendEmailVerification(cred.user, actionCodeSettings());
         setPendingEmail(email);
-        setVerificationCode('');
-        setAwaitingCode(true);
+        setAwaitingVerify(true);
         setResendCooldownSeconds(60);
         setSuccess(UI_TEXT.auth.signupCodeSent);
-      } else {
-        setSuccess(`${UI_TEXT.auth.login} successful!`);
       }
     } catch (err) {
-      console.error('Auth request failed:', err);
-      const errorMessage = err.message || err.toString() || 'Failed to connect to authentication server';
-      setError(`Authentication error: ${errorMessage}. Please check your internet connection and try again.`);
+      console.error('Auth error:', err);
+      setError(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyCode = async () => {
+  const handleResend = async () => {
     setError(null); setSuccess(null);
-    const code = verificationCode.trim();
-    if (!/^\d{6}$/.test(code)) {
-      setError(UI_TEXT.auth.verifyCodeRequired);
-      return;
-    }
-    if (!supabase) {
-      setError('Authentication system not ready. Please refresh the page.');
-      return;
-    }
-    setLoading(true);
-    try {
-      // Verifying the OTP code directly establishes a session — no link click,
-      // so passive email scanners can't consume it.
-      const { error } = await supabase.auth.verifyOtp({
-        email: pendingEmail,
-        token: code,
-        type: 'signup',
-      });
-      if (error) {
-        setError(error.message || 'That code is invalid or has expired. Request a new one.');
-      } else {
-        // onAuthStateChange in App.js picks up the new session and renders the app.
-        setSuccess(UI_TEXT.auth.verifySuccess);
-      }
-    } catch (err) {
-      setError(`Verification failed: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    setError(null); setSuccess(null);
-    if (!supabase || !pendingEmail) {
-      setError('Authentication system not ready. Please refresh the page.');
-      return;
-    }
     if (resendCooldownSeconds > 0) return;
+    if (!auth.currentUser) {
+      setError('Your session expired. Please log in again to resend.');
+      return;
+    }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: pendingEmail,
-        options: { emailRedirectTo: `${getSafeRedirectOrigin()}/` },
-      });
-      if (error) {
-        setError(getFriendlyResetError(error));
-      } else {
-        setSuccess(UI_TEXT.auth.signupCodeSent);
-      }
-      setResendCooldownSeconds(60);
+      await sendEmailVerification(auth.currentUser, actionCodeSettings());
+      setSuccess(UI_TEXT.auth.signupCodeSent);
     } catch (err) {
-      setError(getFriendlyResetError(err));
-      setResendCooldownSeconds(60);
+      setError(friendlyAuthError(err));
     } finally {
+      setResendCooldownSeconds(60);
       setLoading(false);
     }
   };
 
-  const handleCancelVerify = () => {
+  const handleCancelVerify = async () => {
     setError(null); setSuccess(null);
-    setAwaitingCode(false);
+    try { await signOut(auth); } catch (_) { /* ignore */ }
+    setAwaitingVerify(false);
     setPendingEmail('');
-    setVerificationCode('');
   };
 
   const handlePasswordResetEmail = async () => {
+    setError(null); setSuccess(null);
     if (!email) {
       setError(`Enter your ${UI_TEXT.auth.email} first.`);
-      return;
-    }
-    if (!supabase) {
-      setError('Authentication system not ready. Please refresh the page.');
       return;
     }
     if (resetCooldownSeconds > 0) {
@@ -289,168 +193,37 @@ function Auth({ supabase }) {
     }
     setLoading(true);
     try {
-      // Keep reset flow predictable: avoid reusing an active app session.
-      await supabase.auth.signOut();
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${getSafeRedirectOrigin()}/update-password`
-      });
-      if (error) {
-        setError(getFriendlyResetError(error));
-        setResetCooldownSeconds(60);
-      } else {
-        setSuccess(UI_TEXT.auth.resetSent);
-        setResetCooldownSeconds(60);
-      }
+      // The reset link points at our /auth/action handler (set as the custom
+      // action URL in the Firebase console), which applies the code only on
+      // explicit submit — scanner-safe.
+      await sendPasswordResetEmail(auth, email, actionCodeSettings());
+      setSuccess(UI_TEXT.auth.resetSent);
     } catch (err) {
-      setError(getFriendlyResetError(err));
+      // With email-enumeration protection on, Firebase resolves successfully
+      // regardless; only surface real errors (e.g. rate limiting).
+      setError(friendlyAuthError(err));
+    } finally {
       setResetCooldownSeconds(60);
-    } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdatePassword = async () => {
-    setError(null); setSuccess(null);
-    if (newPassword !== confirmPassword) {
-      setError(UI_TEXT.auth.passwordMismatch);
-      return;
-    }
-    if (!supabase) {
-      setError('Authentication system not ready. Please refresh the page.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        setError(error.message);
-      } else {
-        await supabase.auth.signOut();
-        window.location.replace('/');
-      }
-    } catch (err) {
-      setError(`Failed to update password: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ---------- CSS helpers: fonts + radius (scoped to this page) ----------
-  const fontCss = `
-    @font-face {
-      font-family: 'OctoberCompressedDevanagari';
-      src: url('/fonts/OctoberCompressedDevanagari.woff2') format('woff2');
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    /* Utility classes */
-    .isaac-body { font-family: 'IBM Plex Sans Devanagari', 'IBM Plex Sans', Arial, sans-serif; color: #2D2D2D; }
-    .isaac-heading {
-      font-family: 'OctoberCompressedDevanagari','IBM Plex Sans Devanagari','IBM Plex Sans', Arial, sans-serif;
-      font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
-    }
-    .br-only { border-radius: ${BR_ONLY} !important; }
-
-    .br-only .card, .br-only.card, .br-only .btn, .br-only .form-control, .br-only .alert {
-      border-radius: ${BR_ONLY} !important;
-    }
-
-    /* UPDATED: Toggle buttons (react-bootstrap) */
-    .toggle-login-custom {
-      border-top-left-radius: 12px !important;
-      border-top-right-radius: 0 !important;
-      border-bottom-right-radius: 12px !important;
-      border-bottom-left-radius: 0 !important;
-    }
-    .toggle-signup-custom {
-      border-top-left-radius: 0 !important;
-      border-top-right-radius: 12px !important;
-      border-bottom-right-radius: 0 !important;
-      border-bottom-left-radius: 0 !important;
-    }
-  `;
-
-  // Show loading state if supabase is not initialized
-  if (!supabase) {
-    return (
-      <Container className="d-flex align-items-center justify-content-center vh-100">
-        <div>Loading...</div>
-      </Container>
-    );
-  }
-
-  // ---------- Password reset view ----------
-  if (isPasswordResetFlow) {
-    return (
-      <Container className="d-flex align-items-center justify-content-center vh-100 isaac-body">
-        <style>{fontCss}</style>
-        <Card className="p-4 shadow br-only" style={{ maxWidth: 400, width: '100%' }}>
-          <h3 className="text-center mb-3 isaac-heading">{UI_TEXT.auth.updatePassword}</h3>
-          {error && <Alert className="br-only" variant="danger">{error}</Alert>}
-          {success && <Alert className="br-only" variant="success">{success}</Alert>}
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>{UI_TEXT.auth.newPassword ?? 'New Password'}</Form.Label>
-              <Form.Control
-                className="br-only"
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-4">
-              <Form.Label>{UI_TEXT.auth.confirmNewPassword ?? 'Confirm New Password'}</Form.Label>
-              <Form.Control
-                className="br-only"
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-              />
-            </Form.Group>
-            <Button className="w-100 br-only" onClick={handleUpdatePassword} disabled={loading}>
-              {loading ? 'Updating…' : UI_TEXT.auth.updatePassword}
-            </Button>
-          </Form>
-        </Card>
-      </Container>
-    );
-  }
-
-  // ---------- Email code verification view ----------
-  if (awaitingCode) {
+  // ---------- Email verification view (post-signup / unverified login) ----------
+  if (awaitingVerify) {
     const instruction = UI_TEXT.auth.verifyInstruction.replace('{email}', pendingEmail);
     return (
       <Container className="d-flex align-items-center justify-content-center vh-100 isaac-body">
-        <style>{fontCss}</style>
-        <Card className="p-4 shadow br-only" style={{ maxWidth: 420, width: '100%' }}>
+        <style>{AUTH_FONT_CSS}</style>
+        <Card className="p-4 shadow br-only" style={{ maxWidth: 440, width: '100%' }}>
           <h3 className="text-center mb-3 isaac-heading">{UI_TEXT.auth.verifyTitle}</h3>
           <p className="text-secondary small text-center" dangerouslySetInnerHTML={html(instruction)} />
+          <p className="text-muted small text-center">{UI_TEXT.auth.verifySpamNote}</p>
           {error && <Alert className="br-only" variant="danger">{error}</Alert>}
           {success && <Alert className="br-only" variant="success">{success}</Alert>}
           <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>{UI_TEXT.auth.verifyCodeLabel}</Form.Label>
-              <Form.Control
-                className="br-only text-center"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                placeholder="000000"
-                style={{ letterSpacing: '0.4em', fontSize: '1.25rem' }}
-                value={verificationCode}
-                onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              />
-            </Form.Group>
-            <Button className="w-100 mb-2 br-only" onClick={handleVerifyCode} disabled={loading}>
-              {loading ? 'Verifying…' : UI_TEXT.auth.verifyButton}
-            </Button>
             <Button
-              variant="link"
-              className="w-100 p-0 br-only"
-              onClick={handleResendCode}
+              className="w-100 mb-2 br-only"
+              onClick={handleResend}
               disabled={loading || resendCooldownSeconds > 0}
             >
               {resendCooldownSeconds > 0
@@ -469,7 +242,7 @@ function Auth({ supabase }) {
   // ---------- Main auth view ----------
   return (
     <Container fluid className="vh-100 d-flex align-items-center justify-content-center bg-light isaac-body">
-      <style>{fontCss}</style>
+      <style>{AUTH_FONT_CSS}</style>
 
       <Row className="w-100" style={{ maxWidth: 1100 }}>
         {/* LEFT: brand logo + copy */}
@@ -514,7 +287,7 @@ function Auth({ supabase }) {
                 borderTopRightRadius: '0px',
                 borderBottomRightRadius: '12px',
                 borderBottomLeftRadius: '0px',
-                marginRight: '8px', 
+                marginRight: '8px',
               }}
               >
                 {UI_TEXT.auth.login}

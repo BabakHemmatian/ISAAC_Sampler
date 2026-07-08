@@ -22,5 +22,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local Supabase URL/anon key — do not track
+# Env files with per-environment config (Firebase keys live in .env.local,
+# which is already ignored above). Never track any real .env.
 .env
+
+# Local build archive — can contain baked-in env config; never push.
+build.zip
+
+# Local editor/agent tooling config.
+.claude/

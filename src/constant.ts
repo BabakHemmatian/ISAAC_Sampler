@@ -63,20 +63,24 @@ export const UI_TEXT = {
     termsLabel:
       "By using this tool or the associated data and repositories, you agree to the <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Terms_of_Use.md' target='_blank' rel='noopener noreferrer'>Terms of Use</a>.",
     termsRequired: "You must agree to the Terms of Use to create an account.",
-    // ---- Email code verification (signup) ----
+    // ---- Email verification (signup) ----
+    // Firebase sends a verification LINK (not a code). The link points at our
+    // own /auth/action handler, which only applies the token on an explicit
+    // click, so email security scanners that pre-fetch links can't burn it.
     verifyTitle: "Verify your email",
-    verifyInstruction: "We emailed a 6-digit verification code to <strong>{email}</strong>. Enter it below to finish creating your account.",
-    verifyCodeLabel: "Verification code",
-    verifyButton: "Verify & continue",
-    verifyResend: "Resend code",
-    verifyResendCooldown: "Resend code in {seconds}s",
+    verifyInstruction: "We emailed a verification link to <strong>{email}</strong>. Open it and click the confirm button to finish setting up your account.",
+    verifySpamNote: "Don't see it? Check your spam or junk folder — the message can take a minute to arrive.",
+    verifyButton: "I've verified — Continue",
+    verifyResend: "Resend link",
+    verifyResendCooldown: "Resend link in {seconds}s",
     verifyBack: "Use a different email",
-    verifyCodeRequired: "Enter the 6-digit code from your email.",
+    verifyNotYet: "Not verified yet. Open the link in your email, confirm, then press Continue.",
     verifySuccess: "Email verified! Signing you in…",
-    signupCodeSent: "Account created. Check your email for a 6-digit verification code.",
+    signupCodeSent: "Account created. Check your email for a verification link.",
+    loginUnverified: "This account's email isn't verified yet. Open the link we emailed you, or resend it below.",
     // Bump this whenever the Terms of Use document changes substantively. It is
-    // stored on each user's Supabase metadata at signup alongside the acceptance
-    // timestamp, so you can tell which version a given user agreed to.
+    // stored server-side at signup (see /record_consent) alongside the
+    // acceptance timestamp, so you can tell which version a given user agreed to.
     termsVersion: "2026-06-03",
   },
 };
