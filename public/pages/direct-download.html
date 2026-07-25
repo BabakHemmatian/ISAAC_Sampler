@@ -174,12 +174,25 @@ duckdb -c "SELECT author, score FROM \
      <code>https://</code> path; if an older build doesn't, run <code>INSTALL httpfs; LOAD httpfs;</code>
      first. Keep an eye on <code>LIMIT</code>/filters for very large multi-month scans.</p>
 
-  <h2>Notes &amp; terms</h2>
+  <h2>Notes &amp; data use</h2>
+  <div class="note">
+    <strong>Do not share this page, these URLs, or the data with others.</strong> Access to ISAAC is
+    conditioned on accepting the
+    <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md"
+       target="_blank" rel="noopener noreferrer">Data Use Agreement</a>, which prohibits redistribution.
+    Anyone else who wants the data must go to the <a href="/">ISAAC website</a> and accept the Agreement
+    first — please direct them there rather than passing along files or download instructions.
+  </div>
   <div class="note">
     These files are served <strong>read-only</strong>. Only <code>GET</code> and <code>HEAD</code>
     are accepted — the data cannot be modified through this endpoint.
   </div>
   <ul>
+    <li>Your use of these files is governed by the
+        <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md"
+           target="_blank" rel="noopener noreferrer">ISAAC Data Use Agreement</a> — non-commercial research
+        only, no re-identification attempts, no redistribution, and no training of generative models on
+        third-party cloud services.</li>
     <li>Please download considerately — pull the months you need rather than mirroring the whole
         ~668&nbsp;GB corpus in tight parallel loops.</li>
     <li>The data and categories match the corpus served by the <a href="/">ISAAC web app</a>.</li>

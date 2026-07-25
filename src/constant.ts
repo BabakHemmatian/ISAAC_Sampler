@@ -60,9 +60,9 @@ export const UI_TEXT = {
     updateSuccess: "Password updated successfully.",
     passwordMismatch: "Passwords do not match.",
     resetInvalid: "Reset link is invalid or has expired.",
-    termsLabel:
-      "By using this tool or the associated data and repositories, you agree to the <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Terms_of_Use.md' target='_blank' rel='noopener noreferrer'>Terms of Use</a>.",
-    termsRequired: "You must agree to the Terms of Use to create an account.",
+    agreementLabel:
+      "By using this tool or the associated data and repositories, you agree to the <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md' target='_blank' rel='noopener noreferrer'>Data Use Agreement</a>.",
+    agreementRequired: "You must agree to the Data Use Agreement to create an account.",
     // ---- Email verification (signup) ----
     // Firebase sends a verification LINK (not a code). The link points at our
     // own /auth/action handler, which only applies the token on an explicit
@@ -78,9 +78,10 @@ export const UI_TEXT = {
     verifySuccess: "Email verified! Signing you in…",
     signupCodeSent: "Account created. Check your email for a verification link.",
     loginUnverified: "This account's email isn't verified yet. Open the link we emailed you, or resend it below.",
-    // Bump this whenever the Terms of Use document changes substantively. It is
+    // Bump this whenever the Data Use Agreement changes substantively. It is
     // stored server-side at signup (see /record_consent) alongside the
     // acceptance timestamp, so you can tell which version a given user agreed to.
-    termsVersion: "2026-06-03",
+    // 2026-07-25: "Terms of Use" renamed to "Data Use Agreement" (legal office).
+    agreementVersion: "2026-07-25",
   },
 };

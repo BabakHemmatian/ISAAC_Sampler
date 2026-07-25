@@ -40,9 +40,9 @@ function getSafeRedirectOrigin() {
 // Must be an authorized domain in the Firebase console.
 const actionCodeSettings = () => ({ url: `${getSafeRedirectOrigin()}/`, handleCodeInApp: false });
 
-// Record Terms-of-Use consent server-side (Firebase user profiles can't hold
-// arbitrary fields). Best-effort: a failure here must never block signup.
-async function recordTermsConsent(user) {
+// Record Data-Use-Agreement consent server-side (Firebase user profiles can't
+// hold arbitrary fields). Best-effort: a failure here must never block signup.
+async function recordAgreementConsent(user) {
   try {
     await fetch('/record_consent', {
       method: 'POST',
@@ -50,7 +50,7 @@ async function recordTermsConsent(user) {
       body: JSON.stringify({
         uid: user.uid,
         email: user.email,
-        terms_version: UI_TEXT.auth.termsVersion,
+        agreement_version: UI_TEXT.auth.agreementVersion,
         accepted_at: new Date().toISOString(),
       }),
     });
@@ -88,7 +88,7 @@ function Auth() {
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
   // Post-signup / unverified-login: user must click the emailed link (which
   // logs them in from that tab). This screen is informational + resend.
   const [awaitingVerify, setAwaitingVerify] = useState(false);
@@ -119,8 +119,8 @@ function Auth() {
       setError(`${UI_TEXT.auth.email} and ${UI_TEXT.auth.password} are required.`);
       return;
     }
-    if (mode === 'signup' && !termsAccepted) {
-      setError(UI_TEXT.auth.termsRequired);
+    if (mode === 'signup' && !agreementAccepted) {
+      setError(UI_TEXT.auth.agreementRequired);
       return;
     }
     setLoading(true);
@@ -140,7 +140,7 @@ function Auth() {
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         // Legally meaningful; fire-and-forget so it can't block the flow.
-        recordTermsConsent(cred.user);
+        recordAgreementConsent(cred.user);
         await sendEmailVerification(cred.user, actionCodeSettings());
         setPendingEmail(email);
         setAwaitingVerify(true);
@@ -331,14 +331,14 @@ function Auth() {
                 />
               </Form.Group>
               {mode === 'signup' && (
-                <Form.Group className="mb-3" controlId="terms-accept">
+                <Form.Group className="mb-3" controlId="agreement-accept">
                   <Form.Check
                     type="checkbox"
                     required
-                    checked={termsAccepted}
-                    onChange={e => setTermsAccepted(e.target.checked)}
+                    checked={agreementAccepted}
+                    onChange={e => setAgreementAccepted(e.target.checked)}
                     label={
-                      <span dangerouslySetInnerHTML={html(UI_TEXT.auth.termsLabel)} />
+                      <span dangerouslySetInnerHTML={html(UI_TEXT.auth.agreementLabel)} />
                     }
                   />
                 </Form.Group>
@@ -347,7 +347,7 @@ function Auth() {
                 onClick={handleAuth}
                 variant="primary"
                 className="w-100 mb-2 br-only"
-                disabled={loading || (mode === 'signup' && !termsAccepted)}
+                disabled={loading || (mode === 'signup' && !agreementAccepted)}
               >
                 {loading ? 'Loading...' : (mode === 'login' ? UI_TEXT.auth.login : UI_TEXT.auth.signup)}
               </Button>
