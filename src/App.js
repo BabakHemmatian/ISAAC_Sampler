@@ -1,5 +1,5 @@
 // App.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import axios from "axios";
 import Auth from "./Auth";
 import AuthAction from "./AuthAction";
@@ -17,11 +17,31 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { motion, AnimatePresence } from "framer-motion";
 import { Routes, Route } from "react-router-dom";
 import { UI_TEXT } from "./constant.ts";
+import CorpusDemo from "./CorpusDemo";
+
+// Same lazily-loaded dialog the signup flow uses; keeps the markdown renderer
+// out of the main bundle since most sessions never see it.
+const DuaAgreement = lazy(() => import("./DuaAgreement"));
 
 const LOGO_MARK = "/ISAAC Logo 2.png";
 const FAVICON   = "/ISAAC Logo 3.png";
 
 // Backend API URL - Use localhost for local development, empty for production (Nginx proxy)
+// The sampler endpoints require a signed-in user. getIdToken() returns a
+// cached token and silently refreshes it when it is close to expiry, so it is
+// safe (and necessary) to call on every request: a long sampling job can
+// outlive the one-hour lifetime of the token it started with.
+async function authHeaders() {
+  const user = auth.currentUser;
+  if (!user) return {};
+  try {
+    const token = await user.getIdToken();
+    return { Authorization: `Bearer ${token}` };
+  } catch {
+    return {};
+  }
+}
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? "" : "http://localhost:8000");
 
 const html = (s) => ({ __html: s ?? "" });
@@ -31,10 +51,11 @@ const html = (s) => ({ __html: s ?? "" });
 // bytes come straight off the storage DTNs, never through this VM.
 const GLOBUS_DATA_BASE = "https://g-05a4b6.2d513.8443.data.globus.org";
 const GLOBUS_COLLECTION_ID = "9fd39b9f-d60e-44c5-b475-691b614c3d46";
-// Monthly-file prefix per social group: sexuality ships combined
+// Monthly-file prefix per social group: these groups ship combined
 // comments+submissions files (ALL_YYYY-MM.*); the rest are comments-only
 // (RC_YYYY-MM.*) until their combined versions are published.
-const filePrefix = (group) => (group === "sexuality" ? "ALL_" : "RC_");
+const COMBINED_GROUPS = new Set(["sexuality", "age"]);
+const filePrefix = (group) => (COMBINED_GROUPS.has(group) ? "ALL_" : "RC_");
 // At or below this many files, lead with clickable links; above it, lead with
 // the Globus folder / command-line options instead of a long wall of links.
 const FULL_FILES_LINKS_MAX = 10;
@@ -110,8 +131,10 @@ const theme = createTheme({
   }
 });
 
-function MainApp() {
+function MainApp({ initialPage = "home" }) {
   const [session, setSession] = useState(null);
+  // True when the agreement has changed since this user accepted it.
+  const [needsReconsent, setNeedsReconsent] = useState(false);
   const [socialGroup, setSocialGroup] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -125,7 +148,7 @@ function MainApp() {
 
   const [downloadLink, setDownloadLink] = useState("");
   const [fullFiles, setFullFiles] = useState(null);
-  const [page, setPage] = useState("home");
+  const [page, setPage] = useState(initialPage);
   const [issueDesc, setIssueDesc] = useState("");
   const [issueLoading, setIssueLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -177,6 +200,55 @@ function MainApp() {
     });
     return unsubscribe;
   }, []);
+
+  // Re-consent gate. The Data Use Agreement is served live and can be amended
+  // after a user registers (clause 6), so compare the version they accepted
+  // against the current one and make them read and accept the new text before
+  // continuing. Fails OPEN: if either request fails we let the user through
+  // rather than locking them out of the corpus over a transient network error.
+  useEffect(() => {
+    if (!session) { setNeedsReconsent(false); return undefined; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [duaRes, statusRes] = await Promise.all([
+          fetch("/dua", { headers: { Accept: "application/json" } }),
+          fetch("/consent_status", { headers: await authHeaders() }),
+        ]);
+        if (!duaRes.ok || !statusRes.ok) return;
+        const dua = await duaRes.json();
+        const status = await statusRes.json();
+        if (cancelled || status.unavailable || !dua.sha256) return;
+        // No record at all is treated as up to date: accounts created before
+        // hash-based versioning shouldn't be forced through a re-prompt.
+        const accepted = status.accepted?.agreement_sha256;
+        if (accepted && accepted !== dua.sha256) setNeedsReconsent(true);
+      } catch (err) {
+        console.error("Could not check Data Use Agreement version:", err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session]);
+
+  const handleReconsent = async (acceptance) => {
+    try {
+      await fetch("/record_consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: session.uid,
+          email: session.email,
+          agreement_version: acceptance.version,
+          agreement_sha256: acceptance.sha256,
+          agreement_commit: acceptance.commit,
+          accepted_at: acceptance.acceptedAt,
+        }),
+      });
+    } catch (err) {
+      console.error("Could not record updated agreement acceptance:", err);
+    }
+    setNeedsReconsent(false);
+  };
 
   const handleLogout = async () => {
     try {
@@ -276,12 +348,13 @@ function MainApp() {
         end_date: formatDate(endDate),
         num_docs: numDocs ? Number(numDocs) : undefined,
         random_seed: parsedSeed !== undefined ? parsedSeed : undefined
-      });
+      }, { headers: await authHeaders() });
       const taskId = res.data.task_id;
 
       const intervalId = setInterval(async () => {
         try {
-          const { data } = await axios.get(`${API_BASE_URL}/progress/${taskId}`);
+          const { data } = await axios.get(`${API_BASE_URL}/progress/${taskId}`,
+            { headers: await authHeaders() });
           setStage(data.stage || "");
           setPercent(typeof data.percent === "number" ? data.percent : null);
           setEtaHuman(data.eta_human || null);
@@ -313,19 +386,28 @@ function MainApp() {
             });
             setLoading(false);
          }
-        } catch {
+        } catch (err) {
           clearInterval(intervalId); setPollIntervalId(null); setLoading(false);
-          setSnackbar({ open: true, message: UI_TEXT?.snackbar?.progressFailed ?? "Failed to fetch progress.", severity: "error" });
+          const code = err?.response?.status;
+          const msg = (code === 401 || code === 403)
+            ? (err?.response?.data?.detail
+               || "Your session expired. Please sign in again.")
+            : (UI_TEXT?.snackbar?.progressFailed ?? "Failed to fetch progress.");
+          setSnackbar({ open: true, message: msg, severity: "error" });
         }
       }, 1000);
 
       setPollIntervalId(intervalId);
     } catch (err) {
-      setSnackbar({
-        open: true,
-        message: `${UI_TEXT?.snackbar?.sampleFailed ?? "Failed to start job"}: ${err.message}`,
-        severity: "error"
-      });
+      // The backend rejects the request outright when the token is missing,
+      // expired or unverified; err.message alone ("Request failed with status
+      // code 401") would tell the user nothing actionable.
+      const code = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      const message = (code === 401 || code === 403)
+        ? (detail || "Your session expired. Please sign in again.")
+        : `${UI_TEXT?.snackbar?.sampleFailed ?? "Failed to start job"}: ${err.message}`;
+      setSnackbar({ open: true, message, severity: "error" });
       setLoading(false);
     }
   };
@@ -378,14 +460,21 @@ function MainApp() {
 
       <Box sx={{ flexGrow: 1, backgroundColor: "background.default", minHeight: "100vh" }}>
         <IsaacAppBar
-          onHome={() => setPage("home")}
+          onHome={() => { setPage("home"); window.history.pushState({}, "", "/"); }}
           onIssue={() => setPage("issue")}
+          onDemo={() => { setPage("corpus-demo"); window.history.pushState({}, "", "/corpus-development"); }}
           onLogout={handleLogout}
         />
 
         <Container
-          maxWidth="md"
-          sx={{ py: 4, display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}
+          maxWidth={page === "corpus-demo" ? "lg" : "md"}
+          sx={{
+            py: 4, display: "flex", justifyContent: "center",
+            // The walkthrough is a long scrolling page; vertical centring is
+            // right for the short forms but wrong for it.
+            alignItems: page === "corpus-demo" ? "flex-start" : "center",
+            minHeight: "80vh",
+          }}
         >
           {page === "home" && (
             <Box width="100%">
@@ -655,6 +744,8 @@ function MainApp() {
             </Box>
           )}
 
+          {page === "corpus-demo" && <CorpusDemo />}
+
           {page === "issue" && (
             <Box width="100%">
               <Box
@@ -738,13 +829,28 @@ function MainApp() {
             {snackbar.message}
           </Alert>
         </Snackbar>
+
+        {/* Amended-agreement gate: static backdrop, no close button, so the
+            only ways past it are accepting the current text or signing out. */}
+        {needsReconsent && (
+          <Suspense fallback={null}>
+            <DuaAgreement
+              show
+              blocking
+              notice={UI_TEXT.auth.agreementUpdatedNotice}
+              declineLabel={UI_TEXT.auth.agreementSignOut}
+              onHide={handleLogout}
+              onAccept={handleReconsent}
+            />
+          </Suspense>
+        )}
       </Box>
     </ThemeProvider>
   );
 }
 
 // ——— Shared header (used by the main app AND the public doc routes) ———
-function IsaacAppBar({ onHome, onIssue, onLogout }) {
+function IsaacAppBar({ onHome, onIssue, onDemo, onLogout }) {
   return (
     <AppBar
       position="static"
@@ -764,6 +870,7 @@ function IsaacAppBar({ onHome, onIssue, onLogout }) {
         <Box>
           <Button color="inherit" onClick={onHome}>Home</Button>
           <Button color="inherit" onClick={onIssue}>{UI_TEXT?.issueTitle ?? "Report Issue"}</Button>
+          <Button color="inherit" onClick={onDemo}>How It Was Built</Button>
           <Button color="inherit" href="/direct-download/">Direct Download</Button>
           <Button color="inherit" href="/query/">Query Playground</Button>
           <Button color="inherit" onClick={onLogout}>Logout</Button>
@@ -856,14 +963,22 @@ function DocPageShell({ children }) {
   );
 }
 
+// Doc partials are behind the same sign-in gate as the rest of the app (nginx
+// auth_request -> /auth_check), so the fetch has to carry the Firebase token.
 function useHtmlPartial(url) {
   const [body, setBody] = useState("");
   useEffect(() => {
     let cancelled = false;
-    fetch(url)
-      .then((r) => r.text())
-      .then((t) => { if (!cancelled) setBody(t); })
-      .catch(() => { if (!cancelled) setBody("<p>Failed to load page content.</p>"); });
+    (async () => {
+      try {
+        const r = await fetch(url, { headers: await authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const t = await r.text();
+        if (!cancelled) setBody(t);
+      } catch (err) {
+        if (!cancelled) setBody("<p>Failed to load page content. If you were signed out, please sign in again.</p>");
+      }
+    })();
     return () => { cancelled = true; };
   }, [url]);
   return body;
@@ -1069,6 +1184,7 @@ function QueryPlaygroundPage() {
 function App() {
   return (
     <Routes>
+      <Route path="/corpus-development" element={<MainApp initialPage="corpus-demo" />} />
       <Route path="/direct-download" element={<DirectDownloadPage />} />
       <Route path="/query" element={<QueryPlaygroundPage />} />
       <Route path="/auth/action" element={<AuthAction />} />

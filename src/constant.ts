@@ -47,6 +47,12 @@ export const UI_TEXT = {
     welcomeText:
       "This website provides <strong>coding-free access</strong> to the <strong>most comprehensive labeled dataset of social media discourse</strong> about six major <strong>identity-based social categories</strong> (see <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md'>here</a> for more information):<br><ol><li>sexuality (gay-straight)</li><li>race (Black-White)</li><li>skin tone (dark-light)</li><li>weight (thin-fat)</li><li>ability (abled-disabled)</li><li>age (young-old)</li></ol><br>ISAAC contains 527,060,919 thoroughly cleaned Reddit posts (64,581,610 original submissions and 462,479,309 comments). The anonymized dataset includes labels for <strong>moralized language, generalizations, sentiment, emotion and US state-level estimated user locations</strong>.",
     copyright: "\u00A9 2026 Social Cognition Lab, University of Illinois at Urbana-Champaign",
+    // The University of Illinois System Privacy Statement covers "all websites and
+    // domains owned, controlled, operated, and/or maintained by the University of
+    // Illinois System", so it already governs the email addresses collected here \u2014
+    // no project-specific privacy notice is needed, only this link.
+    privacyNotice:
+      "<a href='https://www.vpaa.uillinois.edu/resources/web_privacy' target='_blank' rel='noopener noreferrer'>University of Illinois System Privacy Statement</a>",
     loginTitle: "Login to Your ISAAC Account",
     signupTitle: "Do not have an account with us? Create one with just an email.",
     email: "Email address",
@@ -60,9 +66,27 @@ export const UI_TEXT = {
     updateSuccess: "Password updated successfully.",
     passwordMismatch: "Passwords do not match.",
     resetInvalid: "Reset link is invalid or has expired.",
-    agreementLabel:
-      "By using this tool or the associated data and repositories, you agree to the <a href='https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md' target='_blank' rel='noopener noreferrer'>Data Use Agreement</a>.",
-    agreementRequired: "You must agree to the Data Use Agreement to create an account.",
+    agreementRequired: "You must read and accept the Data Use Agreement to create an account.",
+    // ---- Data Use Agreement (scroll-through flow, 2026-08-02) ----
+    // The agreement text is NOT stored here: it is fetched at runtime from
+    // GET /dua, which serves the live document from the corpus repo. Only the
+    // surrounding UI copy lives in this file.
+    agreementTitle: "Data Use Agreement",
+    agreementOpen: "Read the Data Use Agreement",
+    agreementLoading: "Loading the Data Use Agreement…",
+    agreementLoadError:
+      "The Data Use Agreement could not be loaded. Please check your connection and try again.",
+    agreementRetry: "Try again",
+    agreementScrollHint: "Scroll to the end to continue",
+    agreementAccept: "I have read and accept",
+    agreementDecline: "Cancel",
+    agreementVersionLabel: "Version {version}",
+    agreementAccepted: "Data Use Agreement accepted (version {version}).",
+    agreementReview: "Review again",
+    // Shown when the agreement has been amended since the user accepted it.
+    agreementUpdatedNotice:
+      "The Data Use Agreement has been updated since you accepted it. Please review the current version and accept it to continue using ISAAC.",
+    agreementSignOut: "Sign out",
     // ---- Email verification (signup) ----
     // Firebase sends a verification LINK (not a code). The link points at our
     // own /auth/action handler, which only applies the token on an explicit
@@ -78,10 +102,10 @@ export const UI_TEXT = {
     verifySuccess: "Email verified! Signing you in…",
     signupCodeSent: "Account created. Check your email for a verification link.",
     loginUnverified: "This account's email isn't verified yet. Open the link we emailed you, or resend it below.",
-    // Bump this whenever the Data Use Agreement changes substantively. It is
-    // stored server-side at signup (see /record_consent) alongside the
-    // acceptance timestamp, so you can tell which version a given user agreed to.
-    // 2026-07-25: "Terms of Use" renamed to "Data Use Agreement" (legal office).
-    agreementVersion: "2026-07-25",
+    // NOTE: the agreement version is no longer maintained by hand here. As of
+    // 2026-08-02 the backend derives it from the document itself (git commit
+    // date, plus a SHA-256 of the exact bytes served) and returns it from
+    // /dua; Auth.js forwards those values to /record_consent. This removes the
+    // failure mode where the text changed but a hand-bumped constant did not.
   },
 };

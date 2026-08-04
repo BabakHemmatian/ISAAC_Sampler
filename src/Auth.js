@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import {
   Container, Form, Button, ToggleButtonGroup, ToggleButton,
   Alert, Row, Col, Card
@@ -13,6 +13,10 @@ import {
 import { auth } from './firebaseClient';
 import { AUTH_FONT_CSS, useAuthFonts } from './authStyles';
 import { UI_TEXT } from './constant.ts';
+
+// Code-split: the agreement dialog pulls in a markdown renderer that only
+// signups need, so it stays out of the main bundle until it is opened.
+const DuaAgreement = lazy(() => import('./DuaAgreement'));
 
 const LOGO_PRIMARY = "/ISAAC Logo 1.png"; // ensure this exists in /public
 
@@ -42,7 +46,9 @@ const actionCodeSettings = () => ({ url: `${getSafeRedirectOrigin()}/`, handleCo
 
 // Record Data-Use-Agreement consent server-side (Firebase user profiles can't
 // hold arbitrary fields). Best-effort: a failure here must never block signup.
-async function recordAgreementConsent(user) {
+// `acceptance` comes from <DuaAgreement />: the version identifiers of the exact
+// text that was rendered, plus the moment the user clicked accept.
+async function recordAgreementConsent(user, acceptance) {
   try {
     await fetch('/record_consent', {
       method: 'POST',
@@ -50,8 +56,10 @@ async function recordAgreementConsent(user) {
       body: JSON.stringify({
         uid: user.uid,
         email: user.email,
-        agreement_version: UI_TEXT.auth.agreementVersion,
-        accepted_at: new Date().toISOString(),
+        agreement_version: acceptance.version,
+        agreement_sha256: acceptance.sha256,
+        agreement_commit: acceptance.commit,
+        accepted_at: acceptance.acceptedAt,
       }),
     });
   } catch (_) { /* consent logging is best-effort */ }
@@ -88,7 +96,10 @@ function Auth() {
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resetCooldownSeconds, setResetCooldownSeconds] = useState(0);
-  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  // Null until the user has scrolled through and accepted the agreement; then
+  // holds {version, sha256, commit, acceptedAt} for the consent record.
+  const [agreementAcceptance, setAgreementAcceptance] = useState(null);
+  const [showAgreement, setShowAgreement] = useState(false);
   // Post-signup / unverified-login: user must click the emailed link (which
   // logs them in from that tab). This screen is informational + resend.
   const [awaitingVerify, setAwaitingVerify] = useState(false);
@@ -113,13 +124,21 @@ function Auth() {
     return () => window.clearInterval(timer);
   }, [resendCooldownSeconds]);
 
+  // Submitting via the form (Enter in a field, or the button) rather than a bare
+  // onClick, so pressing Enter after typing a password logs in as expected.
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (loading) return;
+    handleAuth();
+  };
+
   const handleAuth = async () => {
     setError(null); setSuccess(null);
     if (!email || !password) {
       setError(`${UI_TEXT.auth.email} and ${UI_TEXT.auth.password} are required.`);
       return;
     }
-    if (mode === 'signup' && !agreementAccepted) {
+    if (mode === 'signup' && !agreementAcceptance) {
       setError(UI_TEXT.auth.agreementRequired);
       return;
     }
@@ -140,7 +159,7 @@ function Auth() {
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         // Legally meaningful; fire-and-forget so it can't block the flow.
-        recordAgreementConsent(cred.user);
+        recordAgreementConsent(cred.user, agreementAcceptance);
         await sendEmailVerification(cred.user, actionCodeSettings());
         setPendingEmail(email);
         setAwaitingVerify(true);
@@ -260,6 +279,10 @@ function Auth() {
                 dangerouslySetInnerHTML={html(UI_TEXT.auth.welcomeText)}
               />
               <p className="text-muted small mb-0">{UI_TEXT.auth.copyright}</p>
+              <p
+                className="text-muted small mb-0"
+                dangerouslySetInnerHTML={html(UI_TEXT.auth.privacyNotice)}
+              />
             </div>
           </div>
         </Col>
@@ -311,7 +334,7 @@ function Auth() {
             {error && <Alert className="br-only" variant="danger">{error}</Alert>}
             {success && <Alert className="br-only" variant="success">{success}</Alert>}
 
-            <Form>
+            <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
                 <Form.Label>{UI_TEXT.auth.email}</Form.Label>
                 <Form.Control
@@ -331,23 +354,39 @@ function Auth() {
                 />
               </Form.Group>
               {mode === 'signup' && (
-                <Form.Group className="mb-3" controlId="agreement-accept">
-                  <Form.Check
-                    type="checkbox"
-                    required
-                    checked={agreementAccepted}
-                    onChange={e => setAgreementAccepted(e.target.checked)}
-                    label={
-                      <span dangerouslySetInnerHTML={html(UI_TEXT.auth.agreementLabel)} />
-                    }
-                  />
+                <Form.Group className="mb-3">
+                  {agreementAcceptance ? (
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                      <span className="text-success small">
+                        ✓ {UI_TEXT.auth.agreementAccepted.replace(
+                          '{version}', agreementAcceptance.version)}
+                      </span>
+                      <Button
+                        variant="link"
+                        type="button"
+                        className="p-0 small br-only"
+                        onClick={() => setShowAgreement(true)}
+                      >
+                        {UI_TEXT.auth.agreementReview}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline-primary"
+                      type="button"
+                      className="w-100 br-only"
+                      onClick={() => setShowAgreement(true)}
+                    >
+                      {UI_TEXT.auth.agreementOpen}
+                    </Button>
+                  )}
                 </Form.Group>
               )}
               <Button
-                onClick={handleAuth}
+                type="submit"
                 variant="primary"
                 className="w-100 mb-2 br-only"
-                disabled={loading || (mode === 'signup' && !agreementAccepted)}
+                disabled={loading || (mode === 'signup' && !agreementAcceptance)}
               >
                 {loading ? 'Loading...' : (mode === 'login' ? UI_TEXT.auth.login : UI_TEXT.auth.signup)}
               </Button>
@@ -367,6 +406,20 @@ function Auth() {
           </Card>
         </Col>
       </Row>
+
+      {showAgreement && (
+        <Suspense fallback={null}>
+          <DuaAgreement
+            show={showAgreement}
+            onHide={() => setShowAgreement(false)}
+            onAccept={(acceptance) => {
+              setAgreementAcceptance(acceptance);
+              setShowAgreement(false);
+              setError(null);
+            }}
+          />
+        </Suspense>
+      )}
     </Container>
   );
 }
