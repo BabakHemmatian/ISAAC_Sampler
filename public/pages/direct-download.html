@@ -13,12 +13,12 @@
     <li><code>&lt;category&gt;</code> — one of
         <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span><span class="pill">skin_tone</span><span class="pill">weight</span></li>
     <li><code>&lt;YYYY-MM&gt;</code> — month, e.g. <code>2015-03</code> (zero-padded).</li>
-    <li><code>&lt;prefix&gt;</code> — <code>ALL_</code> for <span class="pill">sexuality</span> (combined comments + submissions);
+    <li><code>&lt;prefix&gt;</code> — <code>ALL_</code> for <span class="pill">age</span><span class="pill">sexuality</span> (combined comments + submissions);
         <code>RC_</code> (Reddit Comments only) for the other categories until their combined versions are published.</li>
   </ul>
   <p>Example: <a href="https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv"><code>https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv</code></a></p>
   <p class="muted">Every month is also available as Apache <strong>Parquet</strong> at the same path with a
-     <code>.parquet</code> extension (e.g. <code>https://g-05a4b6.2d513.8443.data.globus.org/age/RC_2015-03.parquet</code>).
+     <code>.parquet</code> extension (e.g. <code>https://g-05a4b6.2d513.8443.data.globus.org/age/ALL_2015-03.parquet</code>).
      <strong>Parquet is recommended for scripting</strong> — it supports column selection and partial
      reads, so you transfer far less than the full file.</p>
 
@@ -168,7 +168,7 @@ duckdb.sql("SELECT count(*) AS n FROM read_parquet($urls) WHERE score > 100",
 # urls = isaac.files("race", "2018-01", "2018-12").url.tolist()</code></pre>
   <pre><code># Command line (single file):
 duckdb -c "SELECT author, score FROM \
-  read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/age/RC_2015-03.parquet') \
+  read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/age/ALL_2015-03.parquet') \
   WHERE score > 500 LIMIT 20"</code></pre>
   <p class="muted">DuckDB auto-loads the <code>httpfs</code> extension on first use of an
      <code>https://</code> path; if an older build doesn't, run <code>INSTALL httpfs; LOAD httpfs;</code>
