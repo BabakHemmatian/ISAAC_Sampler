@@ -1,0 +1,3772 @@
+{
+ "meta": {
+  "group": "weight",
+  "year": "2007",
+  "generated": "2026-07-28 15:20:30",
+  "run_started": "2026-07-19 20:03:20",
+  "total_elapsed_seconds": 626.8,
+  "replay_seconds": null,
+  "repo": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes"
+ },
+ "content_warning": "The examples below are unedited public Reddit comments about body weight, reproduced as they appear in the corpus. Some express hostility toward people based on their size.",
+ "command_args": [
+  {
+   "part": "python ./code/cli.py",
+   "meaning": "The single entry point for every step."
+  },
+  {
+   "part": "--type comments",
+   "meaning": "Comments rather than submissions. ISAAC covers both; this run is comments."
+  },
+  {
+   "part": "--resource <step>",
+   "meaning": "Which step to run. The names match this walkthrough."
+  },
+  {
+   "part": "--group weight",
+   "meaning": "Which social group distinction to process. ISAAC covers six: ability, age, race, sexuality, skin tone and weight."
+  },
+  {
+   "part": "--years 2007",
+   "meaning": "A single year, a range like 2019-2023, or a combination such as 2007,2009,2011-2017."
+  },
+  {
+   "part": "-b 512",
+   "meaning": "How many comments the model reads at once. Required for the steps that use a model; larger is faster but needs more memory."
+  }
+ ],
+ "stages": [
+  {
+   "id": "raw",
+   "label": "The raw archive",
+   "blurb": "The starting point is a public archive of Reddit: one file per month holding every public comment posted that month. For 2007 that is about 2.5 million comments.",
+   "detail": "ISAAC never collects posts from Reddit directly. It reads the same public archive files anyone can download, so the starting material is fixed and the whole process can be repeated by someone else and checked. Account names in these files have already been replaced with stand-in labels before any ISAAC script runs.",
+   "link": {
+    "url": "https://arctic-shift.photon-reddit.com/download-tool",
+    "label": "Browse or download these archive files yourself",
+    "note": "Arctic Shift hosts the monthly Reddit dumps, covering June 2005 to the present, so the 2007 files used here are included. You do not need them to follow this walkthrough."
+   },
+   "count": 2463559,
+   "elapsed_seconds": 0.0,
+   "log": [],
+   "raw_files": 12,
+   "replay_seconds": 1.8,
+   "replay_is_real": false
+  },
+  {
+   "id": "filter_keywords",
+   "label": "Keyword search",
+   "blurb": "The first pass keeps any comment containing a word that might signal it is about body weight. It is deliberately over-eager: the aim here is to lose nothing relevant, not to be accurate. About one comment in twenty survives.",
+   "detail": "The search checks every keyword against every comment at the same time rather than one word after another, which is what makes scanning billions of posts practical. This is the only step that reads the full archive; every later step works on the much smaller file this one produces. Matching is on letter sequences rather than whole words, so 'light' also matches inside 'foglight' and 'pig' inside 'pignon'. Those mistakes are expected at this stage and removed further down.",
+   "log_note": "Each line reports one month of the archive: total comments scanned and how many contained at least one keyword.",
+   "script": "filter_keywords.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/filter_keywords.py",
+   "command": "python ./code/cli.py --type comments --resource filter_keywords --group weight --years 2007",
+   "count": 123690,
+   "columns": 9,
+   "elapsed_seconds": 12.0,
+   "started_at": "2026-07-19 20:03:20",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using 3 processes for parallel processing.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started filtering files for 2007-01 for relevance to the weight social group based on keywords.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started filtering files for 2007-03 for relevance to the weight social group based on keywords.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started filtering files for 2007-02 for relevance to the weight social group based on keywords.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 1.0,
+     "text": "Completed keyword filtering 2007-01 for the weight social group in 0.02 minutes. Total lines: 81341, matched lines: 5091",
+     "replay_offset": 1.0
+    },
+    {
+     "offset": 1.0,
+     "text": "Started filtering files for 2007-04 for relevance to the weight social group based on keywords.",
+     "replay_offset": 1.0
+    },
+    {
+     "offset": 1.0,
+     "text": "Completed keyword filtering 2007-02 for the weight social group in 0.02 minutes. Total lines: 95634, matched lines: 5487",
+     "replay_offset": 1.0
+    },
+    {
+     "offset": 1.0,
+     "text": "Started filtering files for 2007-05 for relevance to the weight social group based on keywords.",
+     "replay_offset": 1.0
+    },
+    {
+     "offset": 2.0,
+     "text": "Completed keyword filtering 2007-03 for the weight social group in 0.03 minutes. Total lines: 112444, matched lines: 5911",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "Started filtering files for 2007-06 for relevance to the weight social group based on keywords.",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 3.0,
+     "text": "Completed keyword filtering 2007-04 for the weight social group in 0.03 minutes. Total lines: 126773, matched lines: 6680",
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "Started filtering files for 2007-07 for relevance to the weight social group based on keywords.",
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 4.0,
+     "text": "Completed keyword filtering 2007-05 for the weight social group in 0.04 minutes. Total lines: 170097, matched lines: 9200",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "Started filtering files for 2007-08 for relevance to the weight social group based on keywords.",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "Completed keyword filtering 2007-06 for the weight social group in 0.04 minutes. Total lines: 178800, matched lines: 9432",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "Started filtering files for 2007-09 for relevance to the weight social group based on keywords.",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Completed keyword filtering 2007-07 for the weight social group in 0.05 minutes. Total lines: 203319, matched lines: 10926",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Started filtering files for 2007-10 for relevance to the weight social group based on keywords.",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 7.0,
+     "text": "Completed keyword filtering 2007-08 for the weight social group in 0.05 minutes. Total lines: 225111, matched lines: 11510",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "Started filtering files for 2007-11 for relevance to the weight social group based on keywords.",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "Completed keyword filtering 2007-09 for the weight social group in 0.06 minutes. Total lines: 259497, matched lines: 12846",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "Started filtering files for 2007-12 for relevance to the weight social group based on keywords.",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 9.0,
+     "text": "Completed keyword filtering 2007-10 for the weight social group in 0.06 minutes. Total lines: 274170, matched lines: 13610",
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 11.0,
+     "text": "Completed keyword filtering 2007-11 for the weight social group in 0.08 minutes. Total lines: 372983, matched lines: 15706",
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 12.0,
+     "text": "Completed keyword filtering 2007-12 for the weight social group in 0.08 minutes. Total lines: 363390, matched lines: 17291",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "Total lines processed: 2463559",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "Total matched lines: 123690",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "Keyword filtering for weight for 2007 finished in 0.20 minutes",
+     "pinned": true,
+     "replay_offset": 12.0
+    }
+   ],
+   "log_shown": 28,
+   "log_total": 28,
+   "replay_seconds": 12.0,
+   "replay_is_real": true
+  },
+  {
+   "id": "filter_language",
+   "label": "English only",
+   "blurb": "Comments that are not in English are set aside. Very little is lost here, because the keyword lists are English to begin with.",
+   "detail": "Language is identified by a statistical model that recognises languages from letter and word patterns. Of 123,690 comments entering this step, 115 were dropped.",
+   "script": "filter_language.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/filter_language.py",
+   "command": "python ./code/cli.py --type comments --resource filter_language --group weight --years 2007",
+   "count": 123575,
+   "columns": 9,
+   "elapsed_seconds": 11.4,
+   "started_at": "2026-07-19 20:03:33",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Started language filtering for the weight content in RC_2007-01.csv.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 1.0,
+     "text": "Finished filtering RC_2007-01.csv for relevance to the weight social group based on language in 0.01 minutes. # of evaluations: 5091, # of English posts: 5083, # of errors: 0",
+     "replay_offset": 0.95
+    },
+    {
+     "offset": 1.0,
+     "text": "Started language filtering for the weight content in RC_2007-02.csv.",
+     "replay_offset": 0.95
+    },
+    {
+     "offset": 1.0,
+     "text": "Finished filtering RC_2007-02.csv for relevance to the weight social group based on language in 0.01 minutes. # of evaluations: 5487, # of English posts: 5481, # of errors: 0",
+     "replay_offset": 0.95
+    },
+    {
+     "offset": 1.0,
+     "text": "Started language filtering for the weight content in RC_2007-03.csv.",
+     "replay_offset": 0.95
+    },
+    {
+     "offset": 2.0,
+     "text": "Finished filtering RC_2007-03.csv for relevance to the weight social group based on language in 0.01 minutes. # of evaluations: 5911, # of English posts: 5906, # of errors: 0",
+     "replay_offset": 1.9
+    },
+    {
+     "offset": 2.0,
+     "text": "Started language filtering for the weight content in RC_2007-04.csv.",
+     "replay_offset": 1.9
+    },
+    {
+     "offset": 2.0,
+     "text": "Finished filtering RC_2007-04.csv for relevance to the weight social group based on language in 0.01 minutes. # of evaluations: 6680, # of English posts: 6671, # of errors: 0",
+     "replay_offset": 1.9
+    },
+    {
+     "offset": 2.0,
+     "text": "Started language filtering for the weight content in RC_2007-05.csv.",
+     "replay_offset": 1.9
+    },
+    {
+     "offset": 3.0,
+     "text": "Finished filtering RC_2007-05.csv for relevance to the weight social group based on language in 0.01 minutes. # of evaluations: 9200, # of English posts: 9193, # of errors: 0",
+     "replay_offset": 2.85
+    },
+    {
+     "offset": 3.0,
+     "text": "Started language filtering for the weight content in RC_2007-06.csv.",
+     "replay_offset": 2.85
+    },
+    {
+     "offset": 4.0,
+     "text": "Finished filtering RC_2007-06.csv for relevance to the weight social group based on language in 0.01 minutes. # of evaluations: 9432, # of English posts: 9425, # of errors: 0",
+     "replay_offset": 3.8
+    },
+    {
+     "offset": 4.0,
+     "text": "Started language filtering for the weight content in RC_2007-07.csv.",
+     "replay_offset": 3.8
+    },
+    {
+     "offset": 5.0,
+     "text": "Finished filtering RC_2007-07.csv for relevance to the weight social group based on language in 0.02 minutes. # of evaluations: 10926, # of English posts: 10914, # of errors: 0",
+     "replay_offset": 4.75
+    },
+    {
+     "offset": 5.0,
+     "text": "Started language filtering for the weight content in RC_2007-08.csv.",
+     "replay_offset": 4.75
+    },
+    {
+     "offset": 6.0,
+     "text": "Finished filtering RC_2007-08.csv for relevance to the weight social group based on language in 0.02 minutes. # of evaluations: 11510, # of English posts: 11502, # of errors: 0",
+     "replay_offset": 5.7
+    },
+    {
+     "offset": 6.0,
+     "text": "Started language filtering for the weight content in RC_2007-09.csv.",
+     "replay_offset": 5.7
+    },
+    {
+     "offset": 7.0,
+     "text": "Finished filtering RC_2007-09.csv for relevance to the weight social group based on language in 0.02 minutes. # of evaluations: 12846, # of English posts: 12830, # of errors: 0",
+     "replay_offset": 6.65
+    },
+    {
+     "offset": 7.0,
+     "text": "Started language filtering for the weight content in RC_2007-10.csv.",
+     "replay_offset": 6.65
+    },
+    {
+     "offset": 9.0,
+     "text": "Finished filtering RC_2007-10.csv for relevance to the weight social group based on language in 0.02 minutes. # of evaluations: 13610, # of English posts: 13600, # of errors: 0",
+     "replay_offset": 8.55
+    },
+    {
+     "offset": 9.0,
+     "text": "Started language filtering for the weight content in RC_2007-11.csv.",
+     "replay_offset": 8.55
+    },
+    {
+     "offset": 10.0,
+     "text": "Finished filtering RC_2007-11.csv for relevance to the weight social group based on language in 0.02 minutes. # of evaluations: 15706, # of English posts: 15698, # of errors: 0",
+     "replay_offset": 9.5
+    },
+    {
+     "offset": 10.0,
+     "text": "Started language filtering for the weight content in RC_2007-12.csv.",
+     "replay_offset": 9.5
+    },
+    {
+     "offset": 11.0,
+     "text": "Finished filtering RC_2007-12.csv for relevance to the weight social group based on language in 0.03 minutes. # of evaluations: 17291, # of English posts: 17272, # of errors: 0",
+     "replay_offset": 10.45
+    },
+    {
+     "offset": 12.0,
+     "text": "Language filtering for the weight social group for 2007 finished in 0.19 minutes",
+     "pinned": true,
+     "replay_offset": 11.4
+    },
+    {
+     "offset": 12.0,
+     "text": "Final report saved to: <path>/isaac_bundle_2007_weight/data/data_reddit_curated/weight/comments/filtered_language/Final_report_filter_language.csv",
+     "replay_offset": 11.4
+    }
+   ],
+   "log_shown": 26,
+   "log_total": 26,
+   "replay_seconds": 11.4,
+   "replay_is_real": true
+  },
+  {
+   "id": "filter_relevance",
+   "label": "Is it actually about weight?",
+   "blurb": "This is where the real work happens. A model trained on hand-labelled examples reads each remaining comment and judges whether it is genuinely about body weight, rather than just containing a word that can refer to it. It removes 97 percent of what the keyword step let through.",
+   "detail": "The model learned from comments that human annotators read and coded themselves, so it is reproducing a judgement people made, not inventing a new one. Agreement between annotators was measured before the model was trained. This step takes longer than all the others combined, which is the price of asking a model to read rather than pattern-match.",
+   "log_note": "The log calls this 'neural network filtering'. 'Using device: cuda' means the work ran on a graphics card, which handles this kind of model far faster than an ordinary processor. Each line reports one month: how many comments were examined and how many were kept.",
+   "script": "filter_relevance.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/filter_relevance.py",
+   "command": "python ./code/cli.py --type comments --resource filter_relevance --group weight --years 2007",
+   "count": 3975,
+   "columns": 9,
+   "elapsed_seconds": 411.6,
+   "started_at": "2026-07-19 20:03:55",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using device: cuda",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Started neural network filtering RC_2007-01.csv for relevance to the weight social group.",
+     "replay_offset": 5.91
+    },
+    {
+     "offset": 25.0,
+     "text": "Finished neural network filtering RC_2007-01.csv for relevance to the weight social group in 0.32 minutes. # of evaluations: 5083, # of relevant posts: 172, # of errors: 0",
+     "replay_offset": 24.62
+    },
+    {
+     "offset": 25.0,
+     "text": "GPU memory: 23.78 GiB / 31.73 GiB used",
+     "replay_offset": 24.62
+    },
+    {
+     "offset": 25.0,
+     "text": "Started neural network filtering RC_2007-02.csv for relevance to the weight social group.",
+     "replay_offset": 24.62
+    },
+    {
+     "offset": 44.0,
+     "text": "Finished neural network filtering RC_2007-02.csv for relevance to the weight social group in 0.30 minutes. # of evaluations: 5481, # of relevant posts: 142, # of errors: 0",
+     "replay_offset": 43.33
+    },
+    {
+     "offset": 44.0,
+     "text": "GPU memory: 23.78 GiB / 31.73 GiB used",
+     "replay_offset": 43.33
+    },
+    {
+     "offset": 44.0,
+     "text": "Started neural network filtering RC_2007-03.csv for relevance to the weight social group.",
+     "replay_offset": 43.33
+    },
+    {
+     "offset": 66.0,
+     "text": "Finished neural network filtering RC_2007-03.csv for relevance to the weight social group in 0.37 minutes. # of evaluations: 5906, # of relevant posts: 135, # of errors: 0",
+     "replay_offset": 64.99
+    },
+    {
+     "offset": 66.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 64.99
+    },
+    {
+     "offset": 66.0,
+     "text": "Started neural network filtering RC_2007-04.csv for relevance to the weight social group.",
+     "replay_offset": 64.99
+    },
+    {
+     "offset": 87.0,
+     "text": "Finished neural network filtering RC_2007-04.csv for relevance to the weight social group in 0.35 minutes. # of evaluations: 6671, # of relevant posts: 259, # of errors: 0",
+     "replay_offset": 85.67
+    },
+    {
+     "offset": 87.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 85.67
+    },
+    {
+     "offset": 87.0,
+     "text": "Started neural network filtering RC_2007-05.csv for relevance to the weight social group.",
+     "replay_offset": 85.67
+    },
+    {
+     "offset": 115.0,
+     "text": "Finished neural network filtering RC_2007-05.csv for relevance to the weight social group in 0.47 minutes. # of evaluations: 9193, # of relevant posts: 295, # of errors: 0",
+     "replay_offset": 113.24
+    },
+    {
+     "offset": 115.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 113.24
+    },
+    {
+     "offset": 115.0,
+     "text": "Started neural network filtering RC_2007-06.csv for relevance to the weight social group.",
+     "replay_offset": 113.24
+    },
+    {
+     "offset": 147.0,
+     "text": "Finished neural network filtering RC_2007-06.csv for relevance to the weight social group in 0.53 minutes. # of evaluations: 9425, # of relevant posts: 350, # of errors: 0",
+     "replay_offset": 144.75
+    },
+    {
+     "offset": 147.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 144.75
+    },
+    {
+     "offset": 147.0,
+     "text": "Started neural network filtering RC_2007-07.csv for relevance to the weight social group.",
+     "replay_offset": 144.75
+    },
+    {
+     "offset": 186.0,
+     "text": "Finished neural network filtering RC_2007-07.csv for relevance to the weight social group in 0.65 minutes. # of evaluations: 10914, # of relevant posts: 323, # of errors: 0",
+     "replay_offset": 183.15
+    },
+    {
+     "offset": 186.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 183.15
+    },
+    {
+     "offset": 186.0,
+     "text": "Started neural network filtering RC_2007-08.csv for relevance to the weight social group.",
+     "replay_offset": 183.15
+    },
+    {
+     "offset": 225.0,
+     "text": "Finished neural network filtering RC_2007-08.csv for relevance to the weight social group in 0.65 minutes. # of evaluations: 11502, # of relevant posts: 422, # of errors: 0",
+     "replay_offset": 221.56
+    },
+    {
+     "offset": 225.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 221.56
+    },
+    {
+     "offset": 225.0,
+     "text": "Started neural network filtering RC_2007-09.csv for relevance to the weight social group.",
+     "replay_offset": 221.56
+    },
+    {
+     "offset": 270.0,
+     "text": "Finished neural network filtering RC_2007-09.csv for relevance to the weight social group in 0.75 minutes. # of evaluations: 12830, # of relevant posts: 401, # of errors: 0",
+     "replay_offset": 265.87
+    },
+    {
+     "offset": 270.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 265.87
+    },
+    {
+     "offset": 270.0,
+     "text": "Started neural network filtering RC_2007-10.csv for relevance to the weight social group.",
+     "replay_offset": 265.87
+    },
+    {
+     "offset": 313.0,
+     "text": "Finished neural network filtering RC_2007-10.csv for relevance to the weight social group in 0.72 minutes. # of evaluations: 13600, # of relevant posts: 476, # of errors: 0",
+     "replay_offset": 308.21
+    },
+    {
+     "offset": 313.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 308.21
+    },
+    {
+     "offset": 313.0,
+     "text": "Started neural network filtering RC_2007-11.csv for relevance to the weight social group.",
+     "replay_offset": 308.21
+    },
+    {
+     "offset": 361.0,
+     "text": "Finished neural network filtering RC_2007-11.csv for relevance to the weight social group in 0.80 minutes. # of evaluations: 15698, # of relevant posts: 549, # of errors: 0",
+     "replay_offset": 355.47
+    },
+    {
+     "offset": 361.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 355.47
+    },
+    {
+     "offset": 361.0,
+     "text": "Started neural network filtering RC_2007-12.csv for relevance to the weight social group.",
+     "replay_offset": 355.47
+    },
+    {
+     "offset": 418.0,
+     "text": "Finished neural network filtering RC_2007-12.csv for relevance to the weight social group in 0.95 minutes. # of evaluations: 17272, # of relevant posts: 451, # of errors: 0",
+     "replay_offset": 411.6
+    },
+    {
+     "offset": 418.0,
+     "text": "GPU memory: 29.72 GiB / 31.73 GiB used",
+     "replay_offset": 411.6
+    },
+    {
+     "offset": 418.0,
+     "text": "Relevance filtering for the weight social group for 2007 finished in 6.86 minutes",
+     "pinned": true,
+     "replay_offset": 411.6
+    },
+    {
+     "offset": 418.0,
+     "text": "Final report saved to: <path>/isaac_bundle_2007_weight/data/data_reddit_curated/weight/comments/filtered_relevance/Final_Report_FilterRelevance.csv",
+     "replay_offset": 411.6
+    }
+   ],
+   "log_shown": 39,
+   "log_total": 39,
+   "replay_seconds": 411.6,
+   "replay_is_real": true
+  },
+  {
+   "id": "filter_keywords_adv",
+   "label": "Ruling out the wrong sense",
+   "blurb": "A second search over the survivors, using patterns precise enough to say 'match this word, but not when this other word follows it'. That rules out phrases like 'fat tire' or 'trans fat', where the word is not about a person's body.",
+   "detail": "These patterns are written in a notation that allows exceptions to be stated directly, which the plain word list in the first step cannot express. The step is tuned for precision: it also removes some genuinely relevant comments in order to keep the irrelevant ones out. That is a deliberate trade, on the reasoning that a wrongly included post contaminates every later measurement, while a wrongly excluded one only costs sample size.",
+   "log_note": "The log calls the search patterns 'regex', short for regular expression, and names the matching engine 'hyperscan'. Neither matters for reading the result: each line reports one month, with how many comments went in and how many came out.",
+   "script": "filter_keywords_adv.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/filter_keywords_adv.py",
+   "command": "python ./code/cli.py --type comments --resource filter_keywords_adv --group weight --years 2007",
+   "count": 2560,
+   "columns": 9,
+   "elapsed_seconds": 0.5,
+   "started_at": "2026-07-19 20:10:54",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using 3 processes for parallel processing. Engine: hyperscan_prefilter",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-01.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-03.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-02.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-03.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 135, matched lines: 77",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-02.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 142, matched lines: 91",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-04.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-05.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-01.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 172, matched lines: 117",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-06.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-04.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 259, matched lines: 169",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-07.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-05.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 295, matched lines: 192",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-08.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-06.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 350, matched lines: 231",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-09.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-07.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 323, matched lines: 216",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-10.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-08.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 422, matched lines: 272",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-11.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-09.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 401, matched lines: 257",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Started advanced regex filtering RC_2007-12.csv for relevance to the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-10.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 476, matched lines: 304",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-11.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 549, matched lines: 356",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "[hyperscan_prefilter] Filtered RC_2007-12.csv for relevance to the weight social group based on advanced regex in 0.00 minutes. Total lines: 451, matched lines: 278",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Total lines processed: 3975",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Total matched lines: 2560",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Advanced keyword filtering for weight for 2007 finished in 0.00 minutes [hyperscan_prefilter]",
+     "pinned": true,
+     "replay_offset": 0.0
+    }
+   ],
+   "log_shown": 28,
+   "log_total": 28,
+   "replay_seconds": 2.33,
+   "replay_is_real": false
+  },
+  {
+   "id": "label_moralization",
+   "label": "Is it a moral claim?",
+   "blurb": "From here on nothing is removed. Each step adds columns to the rows that survived. This one marks whether a comment frames its subject in moral terms, as right or wrong, rather than simply describing it.",
+   "detail": "Moralized language is of interest because it behaves differently from ordinary evaluation: it tends to resist counter-evidence and to spread further. Note that a moralized comment is not necessarily a hostile one, as the examples on this page show.",
+   "column_notes": [
+    {
+     "name": "Moralization",
+     "meaning": "Moralized or Non-Moralized."
+    }
+   ],
+   "script": "label_moralization.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/label_moralization.py",
+   "command": "python ./code/cli.py --type comments --resource label_moralization --group weight --years 2007 -b 512",
+   "count": 2560,
+   "columns": 10,
+   "elapsed_seconds": 7.2,
+   "started_at": "2026-07-19 20:11:04",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using device: cuda",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 2.0,
+     "text": "Started labeling RC_2007-01.csv from the weight social group for moralization.",
+     "replay_offset": 1.6
+    },
+    {
+     "offset": 3.0,
+     "text": "Finished moralization labeling RC_2007-01.csv for the weight social group in 0.01 minutes. Processed rows: 117",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "GPU memory: 3.07 GiB / 31.73 GiB used",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "Started labeling RC_2007-02.csv from the weight social group for moralization.",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "Finished moralization labeling RC_2007-02.csv for the weight social group in 0.00 minutes. Processed rows: 91",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "GPU memory: 3.07 GiB / 31.73 GiB used",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "Started labeling RC_2007-03.csv from the weight social group for moralization.",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "Finished moralization labeling RC_2007-03.csv for the weight social group in 0.00 minutes. Processed rows: 77",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "GPU memory: 3.07 GiB / 31.73 GiB used",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 3.0,
+     "text": "Started labeling RC_2007-04.csv from the weight social group for moralization.",
+     "replay_offset": 2.4
+    },
+    {
+     "offset": 4.0,
+     "text": "Finished moralization labeling RC_2007-04.csv for the weight social group in 0.01 minutes. Processed rows: 169",
+     "replay_offset": 3.2
+    },
+    {
+     "offset": 4.0,
+     "text": "GPU memory: 4.56 GiB / 31.73 GiB used",
+     "replay_offset": 3.2
+    },
+    {
+     "offset": 4.0,
+     "text": "Started labeling RC_2007-05.csv from the weight social group for moralization.",
+     "replay_offset": 3.2
+    },
+    {
+     "offset": 4.0,
+     "text": "Finished moralization labeling RC_2007-05.csv for the weight social group in 0.01 minutes. Processed rows: 192",
+     "replay_offset": 3.2
+    },
+    {
+     "offset": 4.0,
+     "text": "GPU memory: 5.68 GiB / 31.73 GiB used",
+     "replay_offset": 3.2
+    },
+    {
+     "offset": 4.0,
+     "text": "Started labeling RC_2007-06.csv from the weight social group for moralization.",
+     "replay_offset": 3.2
+    },
+    {
+     "offset": 5.0,
+     "text": "Finished moralization labeling RC_2007-06.csv for the weight social group in 0.01 minutes. Processed rows: 231",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 5.0,
+     "text": "GPU memory: 7.04 GiB / 31.73 GiB used",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 5.0,
+     "text": "Started labeling RC_2007-07.csv from the weight social group for moralization.",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 5.0,
+     "text": "Finished moralization labeling RC_2007-07.csv for the weight social group in 0.01 minutes. Processed rows: 216",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 5.0,
+     "text": "GPU memory: 7.04 GiB / 31.73 GiB used",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 5.0,
+     "text": "Started labeling RC_2007-08.csv from the weight social group for moralization.",
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Finished moralization labeling RC_2007-08.csv for the weight social group in 0.01 minutes. Processed rows: 272",
+     "replay_offset": 4.8
+    },
+    {
+     "offset": 6.0,
+     "text": "GPU memory: 8.63 GiB / 31.73 GiB used",
+     "replay_offset": 4.8
+    },
+    {
+     "offset": 6.0,
+     "text": "Started labeling RC_2007-09.csv from the weight social group for moralization.",
+     "replay_offset": 4.8
+    },
+    {
+     "offset": 7.0,
+     "text": "Finished moralization labeling RC_2007-09.csv for the weight social group in 0.01 minutes. Processed rows: 257",
+     "replay_offset": 5.6
+    },
+    {
+     "offset": 7.0,
+     "text": "GPU memory: 8.63 GiB / 31.73 GiB used",
+     "replay_offset": 5.6
+    },
+    {
+     "offset": 7.0,
+     "text": "Started labeling RC_2007-10.csv from the weight social group for moralization.",
+     "replay_offset": 5.6
+    },
+    {
+     "offset": 7.0,
+     "text": "Finished moralization labeling RC_2007-10.csv for the weight social group in 0.01 minutes. Processed rows: 304",
+     "replay_offset": 5.6
+    },
+    {
+     "offset": 7.0,
+     "text": "GPU memory: 10.42 GiB / 31.73 GiB used",
+     "replay_offset": 5.6
+    },
+    {
+     "offset": 7.0,
+     "text": "Started labeling RC_2007-11.csv from the weight social group for moralization.",
+     "replay_offset": 5.6
+    },
+    {
+     "offset": 8.0,
+     "text": "Finished moralization labeling RC_2007-11.csv for the weight social group in 0.02 minutes. Processed rows: 356",
+     "replay_offset": 6.4
+    },
+    {
+     "offset": 8.0,
+     "text": "GPU memory: 12.50 GiB / 31.73 GiB used",
+     "replay_offset": 6.4
+    },
+    {
+     "offset": 8.0,
+     "text": "Started labeling RC_2007-12.csv from the weight social group for moralization.",
+     "replay_offset": 6.4
+    },
+    {
+     "offset": 9.0,
+     "text": "Finished moralization labeling RC_2007-12.csv for the weight social group in 0.01 minutes. Processed rows: 278",
+     "replay_offset": 7.2
+    },
+    {
+     "offset": 9.0,
+     "text": "GPU memory: 12.50 GiB / 31.73 GiB used",
+     "replay_offset": 7.2
+    },
+    {
+     "offset": 9.0,
+     "text": "Moralization labeling for the weight social group for 2007 finished in 0.12 minutes. Total processed rows: 2560",
+     "pinned": true,
+     "replay_offset": 7.2
+    },
+    {
+     "offset": 9.0,
+     "text": "Final summary report saved to: <path>/isaac_bundle_2007_weight/data/data_reddit_curated/weight/comments/labeled_moralization/final_report_label_moralization.csv",
+     "replay_offset": 7.2
+    }
+   ],
+   "log_shown": 39,
+   "log_total": 39,
+   "replay_seconds": 7.2,
+   "replay_is_real": true
+  },
+  {
+   "id": "label_sentiment",
+   "label": "Positive or negative?",
+   "blurb": "Three different sentiment tools score each comment, and all three scores are kept rather than averaged into one. They disagree often, and the disagreement is itself informative.",
+   "detail": "The three were built very differently. Stanza is a model trained on a broad range of text and reports how many sentences are positive, neutral and negative. Vader is a rule-based tool designed for social media and gives one overall score. TextBlob was trained on movie reviews and reports both a positive to negative score and how subjective the writing is. Where they agree you can be more confident; where they diverge, the text is usually genuinely ambiguous.",
+   "column_notes": [
+    {
+     "name": "Sentiment_Stanza_pos / neu / neg",
+     "meaning": "How many sentences Stanza read as positive, neutral and negative."
+    },
+    {
+     "name": "Sentiment_Vader_compound",
+     "meaning": "One overall score from Vader, from -1 (negative) to +1 (positive)."
+    },
+    {
+     "name": "Sentiment_TextBlob_Polarity",
+     "meaning": "Negative to positive sentiment score, -1 to 1."
+    },
+    {
+     "name": "Sentiment_TextBlob_Subjectivity",
+     "meaning": "0 is factual reporting, 1 is pure opinion."
+    }
+   ],
+   "script": "label_sentiment.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/label_sentiment.py",
+   "command": "python ./code/cli.py --type comments --resource label_sentiment --group weight --years 2007 -b 512",
+   "count": 2560,
+   "columns": 16,
+   "elapsed_seconds": 83.4,
+   "started_at": "2026-07-19 20:11:25",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Started labeling RC_2007-01.csv from the weight social group for sentiment.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Finished sentiment labeling RC_2007-01.csv for the weight social group in 0.09 minutes. Processed rows: 117",
+     "replay_offset": 6.42
+    },
+    {
+     "offset": 6.0,
+     "text": "Started labeling RC_2007-02.csv from the weight social group for sentiment.",
+     "replay_offset": 6.42
+    },
+    {
+     "offset": 8.0,
+     "text": "Finished sentiment labeling RC_2007-02.csv for the weight social group in 0.05 minutes. Processed rows: 91",
+     "replay_offset": 8.55
+    },
+    {
+     "offset": 8.0,
+     "text": "Started labeling RC_2007-03.csv from the weight social group for sentiment.",
+     "replay_offset": 8.55
+    },
+    {
+     "offset": 11.0,
+     "text": "Finished sentiment labeling RC_2007-03.csv for the weight social group in 0.04 minutes. Processed rows: 77",
+     "replay_offset": 11.76
+    },
+    {
+     "offset": 11.0,
+     "text": "Started labeling RC_2007-04.csv from the weight social group for sentiment.",
+     "replay_offset": 11.76
+    },
+    {
+     "offset": 16.0,
+     "text": "Finished sentiment labeling RC_2007-04.csv for the weight social group in 0.08 minutes. Processed rows: 169",
+     "replay_offset": 17.11
+    },
+    {
+     "offset": 16.0,
+     "text": "Started labeling RC_2007-05.csv from the weight social group for sentiment.",
+     "replay_offset": 17.11
+    },
+    {
+     "offset": 21.0,
+     "text": "Finished sentiment labeling RC_2007-05.csv for the weight social group in 0.09 minutes. Processed rows: 192",
+     "replay_offset": 22.45
+    },
+    {
+     "offset": 21.0,
+     "text": "Started labeling RC_2007-06.csv from the weight social group for sentiment.",
+     "replay_offset": 22.45
+    },
+    {
+     "offset": 28.0,
+     "text": "Finished sentiment labeling RC_2007-06.csv for the weight social group in 0.12 minutes. Processed rows: 231",
+     "replay_offset": 29.94
+    },
+    {
+     "offset": 28.0,
+     "text": "Started labeling RC_2007-07.csv from the weight social group for sentiment.",
+     "replay_offset": 29.94
+    },
+    {
+     "offset": 37.0,
+     "text": "Finished sentiment labeling RC_2007-07.csv for the weight social group in 0.16 minutes. Processed rows: 216",
+     "replay_offset": 39.56
+    },
+    {
+     "offset": 37.0,
+     "text": "Started labeling RC_2007-08.csv from the weight social group for sentiment.",
+     "replay_offset": 39.56
+    },
+    {
+     "offset": 45.0,
+     "text": "Finished sentiment labeling RC_2007-08.csv for the weight social group in 0.13 minutes. Processed rows: 272",
+     "replay_offset": 48.12
+    },
+    {
+     "offset": 45.0,
+     "text": "Started labeling RC_2007-09.csv from the weight social group for sentiment.",
+     "replay_offset": 48.12
+    },
+    {
+     "offset": 53.0,
+     "text": "Finished sentiment labeling RC_2007-09.csv for the weight social group in 0.12 minutes. Processed rows: 257",
+     "replay_offset": 56.67
+    },
+    {
+     "offset": 53.0,
+     "text": "Started labeling RC_2007-10.csv from the weight social group for sentiment.",
+     "replay_offset": 56.67
+    },
+    {
+     "offset": 61.0,
+     "text": "Finished sentiment labeling RC_2007-10.csv for the weight social group in 0.15 minutes. Processed rows: 304",
+     "replay_offset": 65.22
+    },
+    {
+     "offset": 61.0,
+     "text": "Started labeling RC_2007-11.csv from the weight social group for sentiment.",
+     "replay_offset": 65.22
+    },
+    {
+     "offset": 71.0,
+     "text": "Finished sentiment labeling RC_2007-11.csv for the weight social group in 0.16 minutes. Processed rows: 356",
+     "replay_offset": 75.92
+    },
+    {
+     "offset": 71.0,
+     "text": "Started labeling RC_2007-12.csv from the weight social group for sentiment.",
+     "replay_offset": 75.92
+    },
+    {
+     "offset": 78.0,
+     "text": "Finished sentiment labeling RC_2007-12.csv for the weight social group in 0.12 minutes. Processed rows: 278",
+     "replay_offset": 83.4
+    },
+    {
+     "offset": 78.0,
+     "text": "Sentiment labeling for the weight social group for 2007 finished in 1.39 minutes. Total processed rows: 2560",
+     "pinned": true,
+     "replay_offset": 83.4
+    },
+    {
+     "offset": 78.0,
+     "text": "Final summary report saved to: <path>/isaac_bundle_2007_weight/data/data_reddit_curated/weight/comments/labeled_sentiment/final_report_label_sentiment.csv",
+     "replay_offset": 83.4
+    }
+   ],
+   "log_shown": 26,
+   "log_total": 26,
+   "replay_seconds": 83.4,
+   "replay_is_real": true
+  },
+  {
+   "id": "label_generalization",
+   "label": "How sweeping is the claim?",
+   "blurb": "The comment is split into clauses, and each clause is scored on four features that together determine how sweeping a statement it makes. 'Fat people are lazy' generalises; 'my neighbour skipped the gym today' does not.",
+   "detail": "The four features, with the column names they appear under: whether the clause is about a general category or specific individuals (genericity); whether it describes a lasting state or a particular event (eventivity); whether that event is bounded in time (boundedness); and whether it is presented as something that repeats (habitual). Clauses that are questions, commands or exclamations have no value on these features and are counted under NA. Both raw counts and proportions are recorded, so long and short comments can be compared.",
+   "column_notes": [
+    {
+     "name": "clauses",
+     "meaning": "The comment split into clauses, one per line, in the order they appear."
+    },
+    {
+     "name": "generalization_clause_labels",
+     "meaning": "One composite label per clause, on matching lines. Each label is a combination of the four features below, for example GENERIC SENTENCE (STATIC) or COERCED STATE (GENERIC)."
+    },
+    {
+     "name": "genericity_generic_count / genericity_specific_count",
+     "meaning": "How many clauses are about a general category (humanity, fat people) versus specific individuals (my friend). The more generic the subject, the more sweeping the statement."
+    },
+    {
+     "name": "eventivity_stative_count / eventivity_dynamic_count",
+     "meaning": "How many clauses describe a lasting state (God is benevolent) versus a particular event (I went to Nebraska). Events are less sweeping than states."
+    },
+    {
+     "name": "boundedness_static_count / boundedness_episodic_count",
+     "meaning": "Whether an event has a boundary in time (I ate this morning, episodic) or does not (God loves us, static). Clauses that describe a state count as static automatically."
+    },
+    {
+     "name": "habitual_count",
+     "meaning": "Clauses presenting an event as repeating over time (I went there for years). Repetition makes an event-clause more sweeping."
+    },
+    {
+     "name": "NA_count",
+     "meaning": "Clauses these four features do not apply to: questions, commands and exclamations."
+    },
+    {
+     "name": "the same eight as _proportion",
+     "meaning": "Each count also appears as a share of the comment's clauses, so a two-clause comment and a twenty-clause one can be compared."
+    }
+   ],
+   "script": "label_generalization.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/label_generalization.py",
+   "command": "python ./code/cli.py --type comments --resource label_generalization --group weight --years 2007 -b 512",
+   "count": 2560,
+   "columns": 34,
+   "elapsed_seconds": 72.0,
+   "started_at": "2026-07-19 20:12:54",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using device: cuda",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Started labeling RC_2007-01.csv from the weight social group for generalization.",
+     "replay_offset": 5.54
+    },
+    {
+     "offset": 10.0,
+     "text": "Finished generalization labeling RC_2007-01.csv for the weight social group in 0.08 minutes. Processed rows: 117",
+     "replay_offset": 9.23
+    },
+    {
+     "offset": 10.0,
+     "text": "GPU memory: 1.87 GiB / 31.73 GiB used",
+     "replay_offset": 9.23
+    },
+    {
+     "offset": 10.0,
+     "text": "Started labeling RC_2007-02.csv from the weight social group for generalization.",
+     "replay_offset": 9.23
+    },
+    {
+     "offset": 13.0,
+     "text": "Finished generalization labeling RC_2007-02.csv for the weight social group in 0.05 minutes. Processed rows: 91",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 13.0,
+     "text": "GPU memory: 2.01 GiB / 31.73 GiB used",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 13.0,
+     "text": "Started labeling RC_2007-03.csv from the weight social group for generalization.",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 16.0,
+     "text": "Finished generalization labeling RC_2007-03.csv for the weight social group in 0.05 minutes. Processed rows: 77",
+     "replay_offset": 14.77
+    },
+    {
+     "offset": 16.0,
+     "text": "GPU memory: 2.01 GiB / 31.73 GiB used",
+     "replay_offset": 14.77
+    },
+    {
+     "offset": 16.0,
+     "text": "Started labeling RC_2007-04.csv from the weight social group for generalization.",
+     "replay_offset": 14.77
+    },
+    {
+     "offset": 20.0,
+     "text": "Finished generalization labeling RC_2007-04.csv for the weight social group in 0.07 minutes. Processed rows: 169",
+     "replay_offset": 18.46
+    },
+    {
+     "offset": 20.0,
+     "text": "GPU memory: 2.01 GiB / 31.73 GiB used",
+     "replay_offset": 18.46
+    },
+    {
+     "offset": 20.0,
+     "text": "Started labeling RC_2007-05.csv from the weight social group for generalization.",
+     "replay_offset": 18.46
+    },
+    {
+     "offset": 25.0,
+     "text": "Finished generalization labeling RC_2007-05.csv for the weight social group in 0.08 minutes. Processed rows: 192",
+     "replay_offset": 23.08
+    },
+    {
+     "offset": 25.0,
+     "text": "GPU memory: 2.13 GiB / 31.73 GiB used",
+     "replay_offset": 23.08
+    },
+    {
+     "offset": 25.0,
+     "text": "Started labeling RC_2007-06.csv from the weight social group for generalization.",
+     "replay_offset": 23.08
+    },
+    {
+     "offset": 32.0,
+     "text": "Finished generalization labeling RC_2007-06.csv for the weight social group in 0.11 minutes. Processed rows: 231",
+     "replay_offset": 29.54
+    },
+    {
+     "offset": 32.0,
+     "text": "GPU memory: 2.13 GiB / 31.73 GiB used",
+     "replay_offset": 29.54
+    },
+    {
+     "offset": 32.0,
+     "text": "Started labeling RC_2007-07.csv from the weight social group for generalization.",
+     "replay_offset": 29.54
+    },
+    {
+     "offset": 40.0,
+     "text": "Finished generalization labeling RC_2007-07.csv for the weight social group in 0.14 minutes. Processed rows: 216",
+     "replay_offset": 36.92
+    },
+    {
+     "offset": 40.0,
+     "text": "GPU memory: 2.27 GiB / 31.73 GiB used",
+     "replay_offset": 36.92
+    },
+    {
+     "offset": 40.0,
+     "text": "Started labeling RC_2007-08.csv from the weight social group for generalization.",
+     "replay_offset": 36.92
+    },
+    {
+     "offset": 48.0,
+     "text": "Finished generalization labeling RC_2007-08.csv for the weight social group in 0.12 minutes. Processed rows: 272",
+     "replay_offset": 44.31
+    },
+    {
+     "offset": 48.0,
+     "text": "GPU memory: 2.27 GiB / 31.73 GiB used",
+     "replay_offset": 44.31
+    },
+    {
+     "offset": 48.0,
+     "text": "Started labeling RC_2007-09.csv from the weight social group for generalization.",
+     "replay_offset": 44.31
+    },
+    {
+     "offset": 54.0,
+     "text": "Finished generalization labeling RC_2007-09.csv for the weight social group in 0.11 minutes. Processed rows: 257",
+     "replay_offset": 49.85
+    },
+    {
+     "offset": 54.0,
+     "text": "GPU memory: 2.62 GiB / 31.73 GiB used",
+     "replay_offset": 49.85
+    },
+    {
+     "offset": 54.0,
+     "text": "Started labeling RC_2007-10.csv from the weight social group for generalization.",
+     "replay_offset": 49.85
+    },
+    {
+     "offset": 62.0,
+     "text": "Finished generalization labeling RC_2007-10.csv for the weight social group in 0.13 minutes. Processed rows: 304",
+     "replay_offset": 57.23
+    },
+    {
+     "offset": 62.0,
+     "text": "GPU memory: 2.62 GiB / 31.73 GiB used",
+     "replay_offset": 57.23
+    },
+    {
+     "offset": 62.0,
+     "text": "Started labeling RC_2007-11.csv from the weight social group for generalization.",
+     "replay_offset": 57.23
+    },
+    {
+     "offset": 71.0,
+     "text": "Finished generalization labeling RC_2007-11.csv for the weight social group in 0.15 minutes. Processed rows: 356",
+     "replay_offset": 65.54
+    },
+    {
+     "offset": 71.0,
+     "text": "GPU memory: 2.62 GiB / 31.73 GiB used",
+     "replay_offset": 65.54
+    },
+    {
+     "offset": 71.0,
+     "text": "Started labeling RC_2007-12.csv from the weight social group for generalization.",
+     "replay_offset": 65.54
+    },
+    {
+     "offset": 78.0,
+     "text": "Finished generalization labeling RC_2007-12.csv for the weight social group in 0.12 minutes. Processed rows: 278",
+     "replay_offset": 72.0
+    },
+    {
+     "offset": 78.0,
+     "text": "GPU memory: 2.62 GiB / 31.73 GiB used",
+     "replay_offset": 72.0
+    },
+    {
+     "offset": 78.0,
+     "text": "Generalization labeling for the weight social group for 2007 finished in 1.20 minutes. Total processed rows: 2560",
+     "pinned": true,
+     "replay_offset": 72.0
+    },
+    {
+     "offset": 78.0,
+     "text": "Final summary report saved to: <path>/isaac_bundle_2007_weight/data/data_reddit_curated/weight/comments/labeled_generalization/final_report_label_generalization.csv",
+     "replay_offset": 72.0
+    }
+   ],
+   "log_shown": 39,
+   "log_total": 39,
+   "replay_seconds": 72.0,
+   "replay_is_real": true
+  },
+  {
+   "id": "label_emotion",
+   "label": "Which emotion?",
+   "blurb": "Three emotion classifiers each rate the comment on seven emotions: anger, disgust, fear, joy, sadness, surprise and neutral. As with sentiment, all three sets of scores are kept.",
+   "detail": "Each score runs from 0 to 1 and reflects how strongly that model reads the comment as expressing that emotion. Using three models rather than one means a strong reading can be checked against two independent second opinions.",
+   "column_notes": [
+    {
+     "name": "1_anger, 1_disgust, ... 3_surprise",
+     "meaning": "Seven emotions scored 0 to 1 by each of three models. The leading number is which model."
+    }
+   ],
+   "script": "label_emotion.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/label_emotion.py",
+   "command": "python ./code/cli.py --type comments --resource label_emotion --group weight --years 2007 -b 512",
+   "count": 2560,
+   "columns": 55,
+   "elapsed_seconds": 16.2,
+   "started_at": "2026-07-19 20:14:21",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using device: cuda",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 5.0,
+     "text": "Started labeling RC_2007-01.csv from the weight social group for emotion.",
+     "replay_offset": 3.86
+    },
+    {
+     "offset": 6.0,
+     "text": "Finished emotion labeling RC_2007-01.csv for the weight social group in 0.02 minutes. Processed rows: 117",
+     "replay_offset": 4.63
+    },
+    {
+     "offset": 6.0,
+     "text": "GPU memory: 3.94 GiB / 31.73 GiB used",
+     "replay_offset": 4.63
+    },
+    {
+     "offset": 6.0,
+     "text": "Started labeling RC_2007-02.csv from the weight social group for emotion.",
+     "replay_offset": 4.63
+    },
+    {
+     "offset": 7.0,
+     "text": "Finished emotion labeling RC_2007-02.csv for the weight social group in 0.01 minutes. Processed rows: 91",
+     "replay_offset": 5.4
+    },
+    {
+     "offset": 7.0,
+     "text": "GPU memory: 3.94 GiB / 31.73 GiB used",
+     "replay_offset": 5.4
+    },
+    {
+     "offset": 7.0,
+     "text": "Started labeling RC_2007-03.csv from the weight social group for emotion.",
+     "replay_offset": 5.4
+    },
+    {
+     "offset": 7.0,
+     "text": "Finished emotion labeling RC_2007-03.csv for the weight social group in 0.01 minutes. Processed rows: 77",
+     "replay_offset": 5.4
+    },
+    {
+     "offset": 7.0,
+     "text": "GPU memory: 3.94 GiB / 31.73 GiB used",
+     "replay_offset": 5.4
+    },
+    {
+     "offset": 7.0,
+     "text": "Started labeling RC_2007-04.csv from the weight social group for emotion.",
+     "replay_offset": 5.4
+    },
+    {
+     "offset": 8.0,
+     "text": "Finished emotion labeling RC_2007-04.csv for the weight social group in 0.02 minutes. Processed rows: 169",
+     "replay_offset": 6.17
+    },
+    {
+     "offset": 8.0,
+     "text": "GPU memory: 5.18 GiB / 31.73 GiB used",
+     "replay_offset": 6.17
+    },
+    {
+     "offset": 8.0,
+     "text": "Started labeling RC_2007-05.csv from the weight social group for emotion.",
+     "replay_offset": 6.17
+    },
+    {
+     "offset": 9.0,
+     "text": "Finished emotion labeling RC_2007-05.csv for the weight social group in 0.02 minutes. Processed rows: 192",
+     "replay_offset": 6.94
+    },
+    {
+     "offset": 9.0,
+     "text": "GPU memory: 6.31 GiB / 31.73 GiB used",
+     "replay_offset": 6.94
+    },
+    {
+     "offset": 9.0,
+     "text": "Started labeling RC_2007-06.csv from the weight social group for emotion.",
+     "replay_offset": 6.94
+    },
+    {
+     "offset": 11.0,
+     "text": "Finished emotion labeling RC_2007-06.csv for the weight social group in 0.02 minutes. Processed rows: 231",
+     "replay_offset": 8.49
+    },
+    {
+     "offset": 11.0,
+     "text": "GPU memory: 7.67 GiB / 31.73 GiB used",
+     "replay_offset": 8.49
+    },
+    {
+     "offset": 11.0,
+     "text": "Started labeling RC_2007-07.csv from the weight social group for emotion.",
+     "replay_offset": 8.49
+    },
+    {
+     "offset": 12.0,
+     "text": "Finished emotion labeling RC_2007-07.csv for the weight social group in 0.02 minutes. Processed rows: 216",
+     "replay_offset": 9.26
+    },
+    {
+     "offset": 12.0,
+     "text": "GPU memory: 7.67 GiB / 31.73 GiB used",
+     "replay_offset": 9.26
+    },
+    {
+     "offset": 12.0,
+     "text": "Started labeling RC_2007-08.csv from the weight social group for emotion.",
+     "replay_offset": 9.26
+    },
+    {
+     "offset": 14.0,
+     "text": "Finished emotion labeling RC_2007-08.csv for the weight social group in 0.03 minutes. Processed rows: 272",
+     "replay_offset": 10.8
+    },
+    {
+     "offset": 14.0,
+     "text": "GPU memory: 9.26 GiB / 31.73 GiB used",
+     "replay_offset": 10.8
+    },
+    {
+     "offset": 14.0,
+     "text": "Started labeling RC_2007-09.csv from the weight social group for emotion.",
+     "replay_offset": 10.8
+    },
+    {
+     "offset": 15.0,
+     "text": "Finished emotion labeling RC_2007-09.csv for the weight social group in 0.03 minutes. Processed rows: 257",
+     "replay_offset": 11.57
+    },
+    {
+     "offset": 15.0,
+     "text": "GPU memory: 9.26 GiB / 31.73 GiB used",
+     "replay_offset": 11.57
+    },
+    {
+     "offset": 15.0,
+     "text": "Started labeling RC_2007-10.csv from the weight social group for emotion.",
+     "replay_offset": 11.57
+    },
+    {
+     "offset": 17.0,
+     "text": "Finished emotion labeling RC_2007-10.csv for the weight social group in 0.03 minutes. Processed rows: 304",
+     "replay_offset": 13.11
+    },
+    {
+     "offset": 17.0,
+     "text": "GPU memory: 11.04 GiB / 31.73 GiB used",
+     "replay_offset": 13.11
+    },
+    {
+     "offset": 17.0,
+     "text": "Started labeling RC_2007-11.csv from the weight social group for emotion.",
+     "replay_offset": 13.11
+    },
+    {
+     "offset": 19.0,
+     "text": "Finished emotion labeling RC_2007-11.csv for the weight social group in 0.04 minutes. Processed rows: 356",
+     "replay_offset": 14.66
+    },
+    {
+     "offset": 19.0,
+     "text": "GPU memory: 13.13 GiB / 31.73 GiB used",
+     "replay_offset": 14.66
+    },
+    {
+     "offset": 19.0,
+     "text": "Started labeling RC_2007-12.csv from the weight social group for emotion.",
+     "replay_offset": 14.66
+    },
+    {
+     "offset": 21.0,
+     "text": "Finished emotion labeling RC_2007-12.csv for the weight social group in 0.03 minutes. Processed rows: 278",
+     "replay_offset": 16.2
+    },
+    {
+     "offset": 21.0,
+     "text": "GPU memory: 13.13 GiB / 31.73 GiB used",
+     "replay_offset": 16.2
+    },
+    {
+     "offset": 21.0,
+     "text": "Emotion labeling for the weight social group for 2007 finished in 0.27 minutes. Total processed rows: 2560",
+     "pinned": true,
+     "replay_offset": 16.2
+    },
+    {
+     "offset": 21.0,
+     "text": "Final summary report saved to: <path>/isaac_bundle_2007_weight/data/data_reddit_curated/weight/comments/labeled_emotion/final_report_label_emotion.csv",
+     "replay_offset": 16.2
+    }
+   ],
+   "log_shown": 39,
+   "log_total": 39,
+   "replay_seconds": 16.2,
+   "replay_is_real": true
+  },
+  {
+   "id": "label_location",
+   "label": "Where is the author from?",
+   "blurb": "Estimates where an author lives, using their whole posting history rather than the single comment shown: which words they use, which communities they post in, and what hours they post at. It answers at whatever level the evidence supports and says 'unknown' when there is not enough to go on.",
+   "detail": "The estimate is made once per author and then attached to all of that author's comments, so it describes the person, not the post. It works outward in steps: first whether the author is in the US, then either which world region or which US state. When a finer answer is not supported, the coarser one is kept instead of guessing. This is the slowest step to run over the full corpus, because it has to revisit the whole archive to gather each author's history.",
+   "log_note": "Each month reports how many authors it had to look up, how many it could label, and how many it skipped for lack of evidence ('skipped_lowsamples'). The hidden progress lines are the running count as it works through the archive.",
+   "column_notes": [
+    {
+     "name": "location",
+     "meaning": "US, a two-letter US state, a world region (EUROPE, AMERICAS, ASIA_OCEANIA, AFRICA), NON_US, or UNK when the evidence is thin."
+    },
+    {
+     "name": "location_prob",
+     "meaning": "How confident the model is. Empty when UNK."
+    },
+    {
+     "name": "contender_location / _prob",
+     "meaning": "The runner-up answer and its score."
+    }
+   ],
+   "script": "label_location.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/label_location.py",
+   "command": "python ./code/cli.py --type comments --resource label_location --group weight --years 2007 -b 512",
+   "count": 2560,
+   "columns": 59,
+   "elapsed_seconds": 12.0,
+   "started_at": "2026-07-19 20:14:43",
+   "log": [
+    {
+     "offset": 0.0,
+     "text": "Using 8 processes for parallel month processing.",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-01 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-04 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-03 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-02 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-05 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-07 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-08 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 0.0,
+     "text": "Started labeling user location for RC_2007-06 for the weight social group",
+     "replay_offset": 0.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-02: authors=62 cached=0 need_raw=62 scan_months=8 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-02: authors=62 cached=0 cache_skipped_bias=0 need_raw=62 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=8 months_with_files=8 raw_files_in_spiral=8 raw_files_to_scan=8 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-01: authors=79 cached=0 need_raw=79 scan_months=7 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-01: authors=79 cached=0 cache_skipped_bias=0 need_raw=79 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=7 months_with_files=7 raw_files_in_spiral=7 raw_files_to_scan=7 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-03: authors=62 cached=0 need_raw=62 scan_months=9 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-03: authors=62 cached=0 cache_skipped_bias=0 need_raw=62 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=9 months_with_files=9 raw_files_in_spiral=9 raw_files_to_scan=9 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-04: authors=107 cached=0 need_raw=107 scan_months=10 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-04: authors=107 cached=0 cache_skipped_bias=0 need_raw=107 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=10 months_with_files=10 raw_files_in_spiral=10 raw_files_to_scan=10 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-05: authors=123 cached=0 need_raw=123 scan_months=11 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-05: authors=123 cached=0 cache_skipped_bias=0 need_raw=123 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=11 months_with_files=11 raw_files_in_spiral=11 raw_files_to_scan=11 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-06: authors=149 cached=0 need_raw=149 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-06: authors=149 cached=0 cache_skipped_bias=0 need_raw=149 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=12 raw_files_in_spiral=12 raw_files_to_scan=12 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-07: authors=159 cached=0 need_raw=159 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-07: authors=159 cached=0 cache_skipped_bias=0 need_raw=159 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=12 raw_files_in_spiral=12 raw_files_to_scan=12 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[start] RC_2007-08: authors=166 cached=0 need_raw=166 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-08: authors=166 cached=0 cache_skipped_bias=0 need_raw=166 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=11 raw_files_in_spiral=11 raw_files_to_scan=11 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[scan-progress] RC_2007-01: 1/7 files (14%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[scan-progress] RC_2007-02: 1/8 files (12%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[scan-progress] RC_2007-03: 1/9 files (11%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 2.0,
+     "text": "[scan-progress] RC_2007-04: 1/10 files (10%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 2.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-05: 1/11 files (9%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-02: 2/8 files (25%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-01: 2/7 files (29%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-06: 1/12 files (8%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-03: 2/9 files (22%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-07: 1/12 files (8%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-08: 1/11 files (9%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-04: 2/10 files (20%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-02: 3/8 files (38%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-01: 3/7 files (43%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-05: 2/11 files (18%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-03: 3/9 files (33%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-06: 2/12 files (17%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-07: 2/12 files (17%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-04: 3/10 files (30%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-02: 4/8 files (50%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-01: 4/7 files (57%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-03: 4/9 files (44%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 3.0,
+     "text": "[scan-progress] RC_2007-08: 2/11 files (18%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 3.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-05: 3/11 files (27%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-04: 4/10 files (40%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-06: 3/12 files (25%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-02: 5/8 files (62%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-05: 4/11 files (36%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-01: 5/7 files (71%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-03: 5/9 files (56%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-07: 3/12 files (25%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-06: 4/12 files (33%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-08: 3/11 files (27%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-04: 5/10 files (50%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 4.0,
+     "text": "[scan-progress] RC_2007-02: 6/8 files (75%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 4.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-01: 6/7 files (86%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-03: 6/9 files (67%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-04: 6/10 files (60%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-07: 4/12 files (33%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-05: 5/11 files (45%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-08: 4/11 files (36%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-05: 6/11 files (55%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-06: 5/12 files (42%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-02: 7/8 files (88%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-01: 7/7 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan] RC_2007-01: collected_raw_for=0 authors in 0.05 minutes pending_file_cache_rows=0",
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-03: 7/9 files (78%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-04: 7/10 files (70%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[cache] RC_2007-01: newly_labeled=79 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=79 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[done] user location labeling for RC_2007-01: rows=117 authors=79 cached=0 scanned_raw=79 covered=79 minutes=0.08",
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-06: 6/12 files (50%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "Started labeling user location for RC_2007-09 for the weight social group",
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[start] RC_2007-09: authors=185 cached=0 need_raw=185 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-09: authors=185 cached=0 cache_skipped_bias=0 need_raw=185 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=10 raw_files_in_spiral=10 raw_files_to_scan=10 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 5.0,
+     "text": "[scan-progress] RC_2007-07: 5/12 files (42%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 5.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-05: 7/11 files (64%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-08: 5/11 files (45%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-07: 6/12 files (50%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-02: 8/8 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan] RC_2007-02: collected_raw_for=0 authors in 0.06 minutes pending_file_cache_rows=0",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[cache] RC_2007-02: newly_labeled=62 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=62 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-05: 8/11 files (73%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[done] user location labeling for RC_2007-02: rows=91 authors=62 cached=0 scanned_raw=62 covered=62 minutes=0.09",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "Started labeling user location for RC_2007-10 for the weight social group",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-04: 8/10 files (80%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-03: 8/9 files (89%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[start] RC_2007-10: authors=189 cached=0 need_raw=189 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-10: authors=189 cached=0 cache_skipped_bias=0 need_raw=189 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=9 raw_files_in_spiral=9 raw_files_to_scan=9 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-06: 7/12 files (58%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-09: 1/10 files (10%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-08: 6/11 files (55%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 6.0,
+     "text": "[scan-progress] RC_2007-06: 8/12 files (67%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 6.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-07: 7/12 files (58%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-05: 9/11 files (82%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-03: 9/9 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-04: 9/10 files (90%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan] RC_2007-03: collected_raw_for=0 authors in 0.08 minutes pending_file_cache_rows=0",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[cache] RC_2007-03: newly_labeled=62 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=62 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-10: 1/9 files (11%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[done] user location labeling for RC_2007-03: rows=77 authors=62 cached=0 scanned_raw=62 covered=62 minutes=0.11",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "Started labeling user location for RC_2007-11 for the weight social group",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[start] RC_2007-11: authors=227 cached=0 need_raw=227 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-11: authors=227 cached=0 cache_skipped_bias=0 need_raw=227 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=8 raw_files_in_spiral=8 raw_files_to_scan=8 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-09: 2/10 files (20%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-07: 8/12 files (67%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-06: 9/12 files (75%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 7.0,
+     "text": "[scan-progress] RC_2007-08: 7/11 files (64%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 7.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-05: 10/11 files (91%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-06: 10/12 files (83%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-04: 10/10 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan] RC_2007-04: collected_raw_for=0 authors in 0.09 minutes pending_file_cache_rows=0",
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-10: 2/9 files (22%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[cache] RC_2007-04: newly_labeled=107 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=107 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[done] user location labeling for RC_2007-04: rows=169 authors=107 cached=0 scanned_raw=107 covered=107 minutes=0.12",
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "Started labeling user location for RC_2007-12 for the weight social group",
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[start] RC_2007-12: authors=190 cached=0 need_raw=190 scan_months=12 samples_per_author=25 max_files_to_scan=12 max_radius=6",
+     "full": "[start] RC_2007-12: authors=190 cached=0 cache_skipped_bias=0 need_raw=190 scan_state_hits=0 fully_cached_for_raw=0 raw_type=comments scan_months=12 months_with_files=7 raw_files_in_spiral=7 raw_files_to_scan=7 samples_per_author=25 batch_size=1024 max_files_to_scan=12 max_radius=6 local_seen_bias_threshold=40 flush_every_n_raw=1 shard_cache=False run_id=48637",
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-09: 3/10 files (30%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-08: 8/11 files (73%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-11: 1/8 files (12%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 8.0,
+     "text": "[scan-progress] RC_2007-07: 9/12 files (75%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 8.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-07: 10/12 files (83%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-09: 4/10 files (40%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-05: 11/11 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan] RC_2007-05: collected_raw_for=0 authors in 0.11 minutes pending_file_cache_rows=0",
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-06: 11/12 files (92%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[cache] RC_2007-05: newly_labeled=123 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=123 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[done] user location labeling for RC_2007-05: rows=192 authors=123 cached=0 scanned_raw=123 covered=123 minutes=0.14",
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-10: 3/9 files (33%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-11: 2/8 files (25%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-12: 1/7 files (14%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-08: 9/11 files (82%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 9.0,
+     "text": "[scan-progress] RC_2007-07: 11/12 files (92%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 9.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-08: 10/11 files (91%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-07: 12/12 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan] RC_2007-07: collected_raw_for=0 authors in 0.13 minutes pending_file_cache_rows=0",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[cache] RC_2007-07: newly_labeled=159 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=159 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[done] user location labeling for RC_2007-07: rows=216 authors=159 cached=0 scanned_raw=159 covered=159 minutes=0.15",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-10: 4/9 files (44%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-09: 5/10 files (50%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-08: 11/11 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan] RC_2007-08: collected_raw_for=0 authors in 0.13 minutes pending_file_cache_rows=0",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-06: 12/12 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan] RC_2007-06: collected_raw_for=0 authors in 0.13 minutes pending_file_cache_rows=0",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[cache] RC_2007-08: newly_labeled=166 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=166 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[done] user location labeling for RC_2007-08: rows=272 authors=166 cached=0 scanned_raw=166 covered=166 minutes=0.16",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[cache] RC_2007-06: newly_labeled=149 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=149 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[done] user location labeling for RC_2007-06: rows=231 authors=149 cached=0 scanned_raw=149 covered=149 minutes=0.16",
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-09: 6/10 files (60%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-11: 3/8 files (38%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-12: 2/7 files (29%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 10.0,
+     "text": "[scan-progress] RC_2007-10: 5/9 files (56%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 10.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-11: 4/8 files (50%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-10: 6/9 files (67%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-12: 3/7 files (43%) raw_for=0 authors pending_cache_rows=0 elapsed=0.0m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-09: 7/10 files (70%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-10: 7/9 files (78%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-11: 5/8 files (62%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-09: 8/10 files (80%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-12: 4/7 files (57%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-10: 8/9 files (89%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-09: 9/10 files (90%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 11.0,
+     "text": "[scan-progress] RC_2007-11: 6/8 files (75%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 11.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-09: 10/10 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan] RC_2007-09: collected_raw_for=0 authors in 0.10 minutes pending_file_cache_rows=0",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-10: 9/9 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan] RC_2007-10: collected_raw_for=0 authors in 0.09 minutes pending_file_cache_rows=0",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-12: 5/7 files (71%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[cache] RC_2007-09: newly_labeled=185 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=185 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[done] user location labeling for RC_2007-09: rows=257 authors=185 cached=0 scanned_raw=185 covered=185 minutes=0.11",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[cache] RC_2007-10: newly_labeled=189 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=189 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[done] user location labeling for RC_2007-10: rows=304 authors=189 cached=0 scanned_raw=189 covered=189 minutes=0.10",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-11: 7/8 files (88%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-12: 6/7 files (86%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-11: 8/8 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan] RC_2007-11: collected_raw_for=0 authors in 0.08 minutes pending_file_cache_rows=0",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[cache] RC_2007-11: newly_labeled=227 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=227 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[done] user location labeling for RC_2007-11: rows=356 authors=227 cached=0 scanned_raw=227 covered=227 minutes=0.09",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan-progress] RC_2007-12: 7/7 files (100%) raw_for=0 authors pending_cache_rows=0 elapsed=0.1m",
+     "verbose": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[scan] RC_2007-12: collected_raw_for=0 authors in 0.07 minutes pending_file_cache_rows=0",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[cache] RC_2007-12: newly_labeled=190 cached_confident=0 skipped_lowconf_or_unknown=0 skipped_lowsamples=190 stream_flushes=0 file_cache_rows_written=0 dedup_authors=0 dedup_items=0 top_conf>=0.6 reg_margin>=0.1 state_margin>=0.05 min_samples_cache=25",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[done] user location labeling for RC_2007-12: rows=278 authors=190 cached=0 scanned_raw=190 covered=190 minutes=0.07",
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "[summary] total rows written: 2,560 total authors: 1,698 raw-scanned authors: 1,698",
+     "pinned": true,
+     "replay_offset": 12.0
+    },
+    {
+     "offset": 12.0,
+     "text": "Location labeling finished in 0.20 minutes.",
+     "pinned": true,
+     "replay_offset": 12.0
+    }
+   ],
+   "log_shown": 63,
+   "log_total": 177,
+   "replay_seconds": 12.0,
+   "replay_is_real": true
+  },
+  {
+   "id": "organize_types",
+   "label": "Joining comments and submissions",
+   "blurb": "Everything so far has followed comments. The same steps run separately over submissions, the posts that start a thread. This step merges the two into one file per social group distinction, ordered by time.",
+   "detail": "A submission and the comments replying to it are processed independently, because they need different handling, and are brought together only here. In the merged file a 'type' column records which kind each row is. This walkthrough shows only the comments side, so there is no output to watch at this step, but the published corpus is what comes out of it.",
+   "kind": "info",
+   "elapsed_seconds": 0.0,
+   "log": [],
+   "replay_seconds": 1.8,
+   "script": "organize_types.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/organize_types.py",
+   "replay_is_real": false
+  },
+  {
+   "id": "organize_anonymize",
+   "label": "Anonymising",
+   "blurb": "The last step replaces every account identifier with a random number that stays the same for that account throughout the corpus. An author's posts can still be studied together, but the account behind them cannot be identified.",
+   "detail": "The table linking accounts to numbers is kept on the processing machine and is never published. Nothing else about the row changes at this step.",
+   "script": "organize_anonymize.py",
+   "source_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/code/organize_anonymize.py",
+   "command": "python ./code/cli.py --type comments --resource organize_anonymize --group weight --years 2007",
+   "count": 2560,
+   "columns": 59,
+   "elapsed_seconds": 0.5,
+   "started_at": null,
+   "log": [],
+   "log_shown": 0,
+   "log_total": 0,
+   "replay_seconds": 1.8,
+   "replay_is_real": false
+  }
+ ],
+ "funnel": [
+  {
+   "stage": "filter_keywords",
+   "label": "Keyword search",
+   "kept": 123690,
+   "dropped": 2339869,
+   "kept_pct": 5.02
+  },
+  {
+   "stage": "filter_language",
+   "label": "English only",
+   "kept": 123575,
+   "dropped": 115,
+   "kept_pct": 99.91
+  },
+  {
+   "stage": "filter_relevance",
+   "label": "Is it actually about weight?",
+   "kept": 3975,
+   "dropped": 119600,
+   "kept_pct": 3.22
+  },
+  {
+   "stage": "filter_keywords_adv",
+   "label": "Ruling out the wrong sense",
+   "kept": 2560,
+   "dropped": 1415,
+   "kept_pct": 64.4
+  }
+ ],
+ "monthly": [
+  {
+   "month": "2007-01",
+   "filter_keywords": 5091,
+   "filter_language": 5083,
+   "filter_relevance": 172,
+   "filter_keywords_adv": 117
+  },
+  {
+   "month": "2007-02",
+   "filter_keywords": 5487,
+   "filter_language": 5481,
+   "filter_relevance": 142,
+   "filter_keywords_adv": 91
+  },
+  {
+   "month": "2007-03",
+   "filter_keywords": 5911,
+   "filter_language": 5906,
+   "filter_relevance": 135,
+   "filter_keywords_adv": 77
+  },
+  {
+   "month": "2007-04",
+   "filter_keywords": 6680,
+   "filter_language": 6671,
+   "filter_relevance": 259,
+   "filter_keywords_adv": 169
+  },
+  {
+   "month": "2007-05",
+   "filter_keywords": 9200,
+   "filter_language": 9193,
+   "filter_relevance": 295,
+   "filter_keywords_adv": 192
+  },
+  {
+   "month": "2007-06",
+   "filter_keywords": 9432,
+   "filter_language": 9425,
+   "filter_relevance": 350,
+   "filter_keywords_adv": 231
+  },
+  {
+   "month": "2007-07",
+   "filter_keywords": 10926,
+   "filter_language": 10914,
+   "filter_relevance": 323,
+   "filter_keywords_adv": 216
+  },
+  {
+   "month": "2007-08",
+   "filter_keywords": 11510,
+   "filter_language": 11502,
+   "filter_relevance": 422,
+   "filter_keywords_adv": 272
+  },
+  {
+   "month": "2007-09",
+   "filter_keywords": 12846,
+   "filter_language": 12830,
+   "filter_relevance": 401,
+   "filter_keywords_adv": 257
+  },
+  {
+   "month": "2007-10",
+   "filter_keywords": 13610,
+   "filter_language": 13600,
+   "filter_relevance": 476,
+   "filter_keywords_adv": 304
+  },
+  {
+   "month": "2007-11",
+   "filter_keywords": 15706,
+   "filter_language": 15698,
+   "filter_relevance": 549,
+   "filter_keywords_adv": 356
+  },
+  {
+   "month": "2007-12",
+   "filter_keywords": 17291,
+   "filter_language": 17272,
+   "filter_relevance": 451,
+   "filter_keywords_adv": 278
+  }
+ ],
+ "overview": [
+  {
+   "id": "raw",
+   "label": "The raw archive",
+   "rows": 2463559,
+   "columns": null,
+   "columns_added": 0,
+   "elapsed_seconds": 0.0,
+   "kind": "run"
+  },
+  {
+   "id": "filter_keywords",
+   "label": "Keyword search",
+   "rows": 123690,
+   "columns": 9,
+   "columns_added": 8,
+   "elapsed_seconds": 12.0,
+   "kind": "run"
+  },
+  {
+   "id": "filter_language",
+   "label": "English only",
+   "rows": 123575,
+   "columns": 9,
+   "columns_added": 0,
+   "elapsed_seconds": 11.4,
+   "kind": "run"
+  },
+  {
+   "id": "filter_relevance",
+   "label": "Is it actually about weight?",
+   "rows": 3975,
+   "columns": 9,
+   "columns_added": 0,
+   "elapsed_seconds": 411.6,
+   "kind": "run"
+  },
+  {
+   "id": "filter_keywords_adv",
+   "label": "Ruling out the wrong sense",
+   "rows": 2560,
+   "columns": 9,
+   "columns_added": 0,
+   "elapsed_seconds": 0.5,
+   "kind": "run"
+  },
+  {
+   "id": "label_moralization",
+   "label": "Is it a moral claim?",
+   "rows": 2560,
+   "columns": 10,
+   "columns_added": 1,
+   "elapsed_seconds": 7.2,
+   "kind": "run"
+  },
+  {
+   "id": "label_sentiment",
+   "label": "Positive or negative?",
+   "rows": 2560,
+   "columns": 16,
+   "columns_added": 6,
+   "elapsed_seconds": 83.4,
+   "kind": "run"
+  },
+  {
+   "id": "label_generalization",
+   "label": "How sweeping is the claim?",
+   "rows": 2560,
+   "columns": 34,
+   "columns_added": 18,
+   "elapsed_seconds": 72.0,
+   "kind": "run"
+  },
+  {
+   "id": "label_emotion",
+   "label": "Which emotion?",
+   "rows": 2560,
+   "columns": 55,
+   "columns_added": 21,
+   "elapsed_seconds": 16.2,
+   "kind": "run"
+  },
+  {
+   "id": "label_location",
+   "label": "Where is the author from?",
+   "rows": 2560,
+   "columns": 59,
+   "columns_added": 4,
+   "elapsed_seconds": 12.0,
+   "kind": "run"
+  },
+  {
+   "id": "organize_types",
+   "label": "Joining comments and submissions",
+   "rows": null,
+   "columns": null,
+   "columns_added": 0,
+   "elapsed_seconds": 0.0,
+   "kind": "info"
+  },
+  {
+   "id": "organize_anonymize",
+   "label": "Anonymising",
+   "rows": 2560,
+   "columns": 59,
+   "columns_added": 0,
+   "elapsed_seconds": 0.5,
+   "kind": "run"
+  }
+ ],
+ "variable_list_url": "https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md",
+ "spine": {
+  "id": "cws5w",
+  "text": "you don't need money to go for a jog. you could also burn a few calories by choosing not to drive everywhere. a sedentary lifestyle is as much to blame for obesity as poor diet. choosing fast food and fatty packaged meals because they seem more affordable and convenient is a symptom of laziness, not financial hardship.",
+  "steps": [
+   {
+    "stage": "filter_keywords",
+    "present": true,
+    "new_columns": [
+     "id",
+     "parent id",
+     "author",
+     "time",
+     "subreddit",
+     "score",
+     "matched patterns",
+     "source_row"
+    ],
+    "new_values": {
+     "id": "cws5w",
+     "parent id": "t3_ws1c",
+     "author": "wsu_ea99…",
+     "time": "2007-01-02 22:32:48",
+     "subreddit": "reddit.com",
+     "score": "5",
+     "matched patterns": "fat: fatty , fat: obesity",
+     "source_row": "3545"
+    },
+    "total_columns": 9
+   },
+   {
+    "stage": "filter_language",
+    "present": true,
+    "new_columns": [],
+    "new_values": {},
+    "total_columns": 9
+   },
+   {
+    "stage": "filter_relevance",
+    "present": true,
+    "new_columns": [],
+    "new_values": {},
+    "total_columns": 9
+   },
+   {
+    "stage": "filter_keywords_adv",
+    "present": true,
+    "new_columns": [],
+    "new_values": {},
+    "total_columns": 9
+   },
+   {
+    "stage": "label_moralization",
+    "present": true,
+    "new_columns": [
+     "Moralization"
+    ],
+    "new_values": {
+     "Moralization": "Moralized"
+    },
+    "total_columns": 10
+   },
+   {
+    "stage": "label_sentiment",
+    "present": true,
+    "new_columns": [
+     "Sentiment_Stanza_pos",
+     "Sentiment_Stanza_neu",
+     "Sentiment_Stanza_neg",
+     "Sentiment_Vader_compound",
+     "Sentiment_TextBlob_Polarity",
+     "Sentiment_TextBlob_Subjectivity"
+    ],
+    "new_values": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "2",
+     "Sentiment_Stanza_neg": "2",
+     "Sentiment_Vader_compound": "-0.10735",
+     "Sentiment_TextBlob_Polarity": "0.014285714285714282",
+     "Sentiment_TextBlob_Subjectivity": "0.34285714285714286"
+    },
+    "total_columns": 16
+   },
+   {
+    "stage": "label_generalization",
+    "present": true,
+    "new_columns": [
+     "clauses",
+     "generalization_clause_labels",
+     "genericity_generic_count",
+     "genericity_specific_count",
+     "eventivity_stative_count",
+     "eventivity_dynamic_count",
+     "boundedness_static_count",
+     "boundedness_episodic_count",
+     "habitual_count",
+     "NA_count",
+     "genericity_generic_proportion",
+     "genericity_specific_proportion",
+     "eventivity_stative_proportion",
+     "eventivity_dynamic_proportion",
+     "boundedness_static_proportion",
+     "boundedness_episodic_proportion",
+     "habitual_proportion",
+     "NA_proportion"
+    ],
+    "new_values": {
+     "clauses": "you don't need money to go for a jog.\nyou could also burn a few calories by choosing not to drive everywhere.\na sedentary lifestyle is as much to blame for obesity as poor diet.\nchoosing fast food and fatty packaged meals because they seem more affordable and convenient is a symptom of laziness, not financial hardship.",
+     "generalization_clause_labels": "##GENERIC SENTENCE (STATIC)\n##COERCED STATE (GENERIC)\n##GENERIC SENTENCE (STATIC)\n##GENERIC SENTENCE (STATIC)",
+     "genericity_generic_count": "4",
+     "genericity_specific_count": "0",
+     "eventivity_stative_count": "3",
+     "eventivity_dynamic_count": "1",
+     "boundedness_static_count": "4",
+     "boundedness_episodic_count": "0",
+     "habitual_count": "0",
+     "NA_count": "0",
+     "genericity_generic_proportion": "1.0",
+     "genericity_specific_proportion": "0.0",
+     "eventivity_stative_proportion": "0.75",
+     "eventivity_dynamic_proportion": "0.25",
+     "boundedness_static_proportion": "1.0",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.0"
+    },
+    "total_columns": 34
+   },
+   {
+    "stage": "label_emotion",
+    "present": true,
+    "new_columns": [
+     "1_anger",
+     "1_disgust",
+     "1_fear",
+     "1_joy",
+     "1_neutral",
+     "1_sadness",
+     "1_surprise",
+     "2_anger",
+     "2_disgust",
+     "2_fear",
+     "2_joy",
+     "2_neutral",
+     "2_sadness",
+     "2_surprise",
+     "3_neutral",
+     "3_joy",
+     "3_surprise",
+     "3_anger",
+     "3_sadness",
+     "3_disgust",
+     "3_fear"
+    ],
+    "new_values": {
+     "1_anger": "0.011409567669034004",
+     "1_disgust": "0.0033187526278197765",
+     "1_fear": "0.0016983668319880962",
+     "1_joy": "0.08183189481496811",
+     "1_neutral": "0.15333066880702972",
+     "1_sadness": "0.7322143912315369",
+     "1_surprise": "0.01619648188352585",
+     "2_anger": "0.0019342610612511635",
+     "2_disgust": "0.002099273493513465",
+     "2_fear": "0.0006361912237480283",
+     "2_joy": "0.001004416379146278",
+     "2_neutral": "0.6398485898971558",
+     "2_sadness": "0.004264635033905506",
+     "2_surprise": "0.0005132579244673252",
+     "3_neutral": "0.7912237048149109",
+     "3_joy": "0.010716911405324936",
+     "3_surprise": "0.002760405419394374",
+     "3_anger": "0.16216586530208588",
+     "3_sadness": "0.012813941575586796",
+     "3_disgust": "0.016445396468043327",
+     "3_fear": "0.0038738343864679337"
+    },
+    "total_columns": 55
+   },
+   {
+    "stage": "label_location",
+    "present": true,
+    "new_columns": [
+     "location",
+     "location_prob",
+     "contender_location",
+     "contender_location_prob"
+    ],
+    "new_values": {
+     "location": "UNK",
+     "location_prob": "",
+     "contender_location": "US",
+     "contender_location_prob": "0.628706"
+    },
+    "total_columns": 59
+   },
+   {
+    "stage": "organize_anonymize",
+    "present": true,
+    "new_columns": [],
+    "new_values": {},
+    "total_columns": 59,
+    "changed_values": {
+     "author": "166649693861"
+    }
+   }
+  ]
+ },
+ "examples": [
+  {
+   "id": "cws5w",
+   "month": "2007-01",
+   "kind": "spine",
+   "role": "Survives all ten stages. This is the comment the walkthrough follows.",
+   "sensitive": false,
+   "text": "you don't need money to go for a jog. you could also burn a few calories by choosing not to drive everywhere. a sedentary lifestyle is as much to blame for obesity as poor diet. choosing fast food and fatty packaged meals because they seem more affordable and convenient is a symptom of laziness, not financial hardship.",
+   "matched": "fat: obesity,fat: fatty",
+   "subreddit": "reddit.com",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "2",
+     "Sentiment_Stanza_neg": "2",
+     "Sentiment_Vader_compound": "-0.10735",
+     "Sentiment_TextBlob_Polarity": "0.014285714285714282",
+     "Sentiment_TextBlob_Subjectivity": "0.34285714285714286"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "1.0",
+     "genericity_specific_proportion": "0.0",
+     "eventivity_stative_proportion": "0.75",
+     "eventivity_dynamic_proportion": "0.25",
+     "boundedness_static_proportion": "1.0",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.0"
+    },
+    "label_emotion": {
+     "1_anger": "0.011409567669034004",
+     "1_disgust": "0.0033187526278197765",
+     "1_fear": "0.0016983668319880962",
+     "1_joy": "0.08183189481496811",
+     "1_neutral": "0.15333066880702972",
+     "1_sadness": "0.7322143912315369",
+     "1_surprise": "0.01619648188352585"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "cx1dx",
+   "month": "2007-01",
+   "kind": "rejected",
+   "role": "Not English, and the keyword only matched because the letters of 'pig' happen to sit inside 'pignon'. Two different kinds of mistake in one row.",
+   "sensitive": false,
+   "text": "il est méchant monsieur brochant, il est mignon monsieur pignon... :)",
+   "matched": "fat: pig",
+   "subreddit": "reddit.com",
+   "rejected_at": "filter_language",
+   "page": "filter_language"
+  },
+  {
+   "id": "cwl44",
+   "month": "2007-01",
+   "kind": "rejected",
+   "role": "'biggest' in the size sense, not the body sense.",
+   "sensitive": false,
+   "text": "\"one of new york's biggest attractions\", my ass. more like #837.",
+   "matched": "fat: biggest",
+   "subreddit": "reddit.com",
+   "rejected_at": "filter_relevance",
+   "page": "filter_relevance"
+  },
+  {
+   "id": "cwn71",
+   "month": "2007-01",
+   "kind": "rejected",
+   "role": "'light' as in physics. The keyword list cannot tell these apart; the classifier can.",
+   "sensitive": false,
+   "text": "light travels at different speeds in different materials; measured by the index of refraction. just fyi. (_highest_ is in vacuum).",
+   "matched": "thin: light",
+   "subreddit": "science",
+   "rejected_at": "filter_relevance",
+   "page": "filter_relevance"
+  },
+  {
+   "id": "cwln8",
+   "month": "2007-01",
+   "kind": "rejected",
+   "role": "'foglight' contains the letters of 'light'. Word matching at its most literal.",
+   "sensitive": false,
+   "text": "my 85 volvo wagon has foglight holes but no foglights",
+   "matched": "thin: light",
+   "subreddit": "reddit.com",
+   "rejected_at": "filter_relevance",
+   "page": "filter_relevance"
+  },
+  {
+   "id": "cwo6z",
+   "month": "2007-01",
+   "kind": "rejected",
+   "role": "Food-sense 'fat'. The relevance classifier had no reason to reject it; the regex stage does.",
+   "sensitive": false,
+   "text": "trans fat: the nicotine of today...",
+   "matched": "fat: fat:",
+   "subreddit": "reddit.com",
+   "rejected_at": "filter_keywords_adv",
+   "page": "filter_keywords_adv"
+  },
+  {
+   "id": "cx5q7",
+   "month": "2007-01",
+   "kind": "survivor",
+   "role": "Fully generalized: generic entities, persistent states, no stated start or end.",
+   "sensitive": false,
+   "text": "america is one of thoe few rare places where you can be both obese and malnourished",
+   "matched": "fat: obese,thin: malnourished",
+   "subreddit": "reddit.com",
+   "page": "label_generalization",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "1",
+     "Sentiment_Stanza_neg": "0",
+     "Sentiment_Vader_compound": "0.0",
+     "Sentiment_TextBlob_Polarity": "0.04999999999999999",
+     "Sentiment_TextBlob_Subjectivity": "0.5"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "1.0",
+     "genericity_specific_proportion": "0.0",
+     "eventivity_stative_proportion": "1.0",
+     "eventivity_dynamic_proportion": "0.0",
+     "boundedness_static_proportion": "1.0",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.0"
+    },
+    "label_emotion": {
+     "1_anger": "0.0011037911754101515",
+     "1_disgust": "0.0025439343880861998",
+     "1_fear": "0.003473751712590456",
+     "1_joy": "0.004532839171588421",
+     "1_neutral": "0.016990212723612785",
+     "1_sadness": "0.9669448137283325",
+     "1_surprise": "0.004410573747009039"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "c02fuoz",
+   "month": "2007-11",
+   "kind": "survivor",
+   "role": "The opposite end: a specific thing, something that happened, and a time frame it happened in. Every clause is specific, dynamic and episodic, so nothing here generalizes.",
+   "sensitive": false,
+   "text": "an anti-obesity pill that went on sale in britain this year has been shown to help people lose weight in the first extensive survey of scientific trials of the drug.",
+   "matched": "fat: obesity",
+   "subreddit": "reddit.com",
+   "page": "label_generalization",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Non-Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "1",
+     "Sentiment_Stanza_neg": "0",
+     "Sentiment_Vader_compound": "0.0",
+     "Sentiment_TextBlob_Polarity": "0.125",
+     "Sentiment_TextBlob_Subjectivity": "0.3333333333333333"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "0.0",
+     "genericity_specific_proportion": "1.0",
+     "eventivity_stative_proportion": "0.0",
+     "eventivity_dynamic_proportion": "1.0",
+     "boundedness_static_proportion": "0.0",
+     "boundedness_episodic_proportion": "1.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.0"
+    },
+    "label_emotion": {
+     "1_anger": "0.01762629672884941",
+     "1_disgust": "0.022065190598368645",
+     "1_fear": "0.07830432057380676",
+     "1_joy": "0.5814271569252014",
+     "1_neutral": "0.16456055641174316",
+     "1_sadness": "0.04142497852444649",
+     "1_surprise": "0.09459150582551956"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "c1z9g8",
+   "month": "2007-06",
+   "kind": "survivor",
+   "role": "Moralized and warm at once. Moralization is not the same thing as hostility.",
+   "sensitive": false,
+   "text": "my pov is that no-one chooses to be that overweight. it is an illness. i am happy to live in a country where medical care has an evenly shared cost, and is supplied on the basis of need, not ability to pay.",
+   "matched": "fat: overweight",
+   "subreddit": "reddit.com",
+   "page": "label_moralization",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "1",
+     "Sentiment_Stanza_neu": "1",
+     "Sentiment_Stanza_neg": "1",
+     "Sentiment_Vader_compound": "0.020333333333333353",
+     "Sentiment_TextBlob_Polarity": "0.31212121212121213",
+     "Sentiment_TextBlob_Subjectivity": "0.5"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "0.8",
+     "genericity_specific_proportion": "0.2",
+     "eventivity_stative_proportion": "0.8",
+     "eventivity_dynamic_proportion": "0.2",
+     "boundedness_static_proportion": "0.8",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.2",
+     "NA_proportion": "0.0"
+    },
+    "label_emotion": {
+     "1_anger": "0.0007801103638485074",
+     "1_disgust": "0.00033258527400903404",
+     "1_fear": "0.00022902915952727199",
+     "1_joy": "0.991422712802887",
+     "1_neutral": "0.0011311807902529836",
+     "1_sadness": "0.0036837311927229166",
+     "1_surprise": "0.002420573029667139"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "c20q0g",
+   "month": "2007-06",
+   "kind": "survivor",
+   "role": "Specific and non-moralized, a personal anecdote and the mirror image of the row above.",
+   "sensitive": false,
+   "text": "i've eaten like shit all my life but i run a lot every day and i'm quite skinny and feel good. everything in balance.",
+   "matched": "thin: skinny",
+   "subreddit": "reddit.com",
+   "page": "label_moralization",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Non-Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "1",
+     "Sentiment_Stanza_neu": "1",
+     "Sentiment_Stanza_neg": "0",
+     "Sentiment_Vader_compound": "0.2553",
+     "Sentiment_TextBlob_Polarity": "0.24999999999999997",
+     "Sentiment_TextBlob_Subjectivity": "0.7000000000000001"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "0.2",
+     "genericity_specific_proportion": "0.6",
+     "eventivity_stative_proportion": "0.4",
+     "eventivity_dynamic_proportion": "0.4",
+     "boundedness_static_proportion": "0.4",
+     "boundedness_episodic_proportion": "0.2",
+     "habitual_proportion": "0.2",
+     "NA_proportion": "0.2"
+    },
+    "label_emotion": {
+     "1_anger": "0.001927983365021646",
+     "1_disgust": "0.0012141839833930135",
+     "1_fear": "0.0006844292511232197",
+     "1_joy": "0.9808387756347656",
+     "1_neutral": "0.0013374326517805457",
+     "1_sadness": "0.013028237037360668",
+     "1_surprise": "0.0009689775761216879"
+    },
+    "label_location": {
+     "location": "UNK"
+    }
+   }
+  },
+  {
+   "id": "c2q78r",
+   "month": "2007-09",
+   "kind": "survivor",
+   "role": "All three tools agree this is positive. Note that positive sentiment is about tone, not about whether the claim is correct.",
+   "sensitive": false,
+   "text": "here's a great article about why fat is good for you: http://www.westonaprice.org/knowyourfats/skinny.html",
+   "matched": "thin: skinny",
+   "subreddit": "reddit.com",
+   "page": "label_sentiment",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "1",
+     "Sentiment_Stanza_neu": "0",
+     "Sentiment_Stanza_neg": "0",
+     "Sentiment_Vader_compound": "0.7906",
+     "Sentiment_TextBlob_Polarity": "0.75",
+     "Sentiment_TextBlob_Subjectivity": "0.675"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "0.0",
+     "genericity_specific_proportion": "0.5",
+     "eventivity_stative_proportion": "0.5",
+     "eventivity_dynamic_proportion": "0.0",
+     "boundedness_static_proportion": "0.5",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.5"
+    },
+    "label_emotion": {
+     "1_anger": "0.003235146403312683",
+     "1_disgust": "0.0026767970994114876",
+     "1_fear": "0.001987285213544965",
+     "1_joy": "0.2797888219356537",
+     "1_neutral": "0.6379461288452148",
+     "1_sadness": "0.009639516472816467",
+     "1_surprise": "0.0647263154387474"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "c1kvu6",
+   "month": "2007-04",
+   "kind": "survivor",
+   "role": "All three agree this is strongly negative, and Stanza counts the one sentence as negative.",
+   "sensitive": true,
+   "text": "being morbidly obese has nothing to do with body image problems in mainstream culture, it's both disgusting and unhealthy.",
+   "matched": "fat: obese",
+   "subreddit": "reddit.com",
+   "page": "label_sentiment",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "0",
+     "Sentiment_Stanza_neg": "1",
+     "Sentiment_Vader_compound": "-0.8591",
+     "Sentiment_TextBlob_Polarity": "-0.7",
+     "Sentiment_TextBlob_Subjectivity": "0.85"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "1.0",
+     "genericity_specific_proportion": "0.0",
+     "eventivity_stative_proportion": "1.0",
+     "eventivity_dynamic_proportion": "0.0",
+     "boundedness_static_proportion": "1.0",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.0"
+    },
+    "label_emotion": {
+     "1_anger": "0.002381392754614353",
+     "1_disgust": "0.986872673034668",
+     "1_fear": "0.003713220125064254",
+     "1_joy": "0.0004008962132502347",
+     "1_neutral": "0.0031310461927205324",
+     "1_sadness": "0.002792980754747987",
+     "1_surprise": "0.0007077294867485762"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "c2up1s",
+   "month": "2007-09",
+   "kind": "survivor",
+   "role": "The interesting case: Vader reads this as positive, TextBlob as negative, Stanza as negative. Keeping all three is what makes a disagreement like this visible instead of averaged away.",
+   "sensitive": false,
+   "text": "not to mention the food that makes them obese is usually on credit cards that they can't pay off.",
+   "matched": "fat: obese",
+   "subreddit": "reddit.com",
+   "page": "label_sentiment",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Non-Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "0",
+     "Sentiment_Stanza_neg": "1",
+     "Sentiment_Vader_compound": "0.4397",
+     "Sentiment_TextBlob_Polarity": "-0.25",
+     "Sentiment_TextBlob_Subjectivity": "0.25"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "0.5",
+     "genericity_specific_proportion": "0.0",
+     "eventivity_stative_proportion": "0.0",
+     "eventivity_dynamic_proportion": "0.5",
+     "boundedness_static_proportion": "0.25",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.25",
+     "NA_proportion": "0.5"
+    },
+    "label_emotion": {
+     "1_anger": "0.03909227252006531",
+     "1_disgust": "0.278128445148468",
+     "1_fear": "0.014625555835664272",
+     "1_joy": "0.0019968270789831877",
+     "1_neutral": "0.45632266998291016",
+     "1_sadness": "0.1924659013748169",
+     "1_surprise": "0.01736827939748764"
+    },
+    "label_location": {
+     "location": "UNK",
+     "contender_location": "US"
+    }
+   }
+  },
+  {
+   "id": "c1fwet",
+   "month": "2007-04",
+   "kind": "survivor",
+   "role": "Moralized, fully generic, near-maximal disgust. This is the kind of language the corpus exists to let researchers measure.",
+   "sensitive": true,
+   "text": "the sight of all of those out-of-shape, flabby bodies is kind of disgusting.",
+   "matched": "fat: flabby",
+   "subreddit": "reddit.com",
+   "page": "label_emotion",
+   "labels_by_stage": {
+    "label_moralization": {
+     "Moralization": "Moralized"
+    },
+    "label_sentiment": {
+     "Sentiment_Stanza_pos": "0",
+     "Sentiment_Stanza_neu": "0",
+     "Sentiment_Stanza_neg": "1",
+     "Sentiment_Vader_compound": "-0.5709",
+     "Sentiment_TextBlob_Polarity": "-0.2",
+     "Sentiment_TextBlob_Subjectivity": "0.95"
+    },
+    "label_generalization": {
+     "genericity_generic_proportion": "1.0",
+     "genericity_specific_proportion": "0.0",
+     "eventivity_stative_proportion": "1.0",
+     "eventivity_dynamic_proportion": "0.0",
+     "boundedness_static_proportion": "1.0",
+     "boundedness_episodic_proportion": "0.0",
+     "habitual_proportion": "0.0",
+     "NA_proportion": "0.0"
+    },
+    "label_emotion": {
+     "1_anger": "0.0017039203085005283",
+     "1_disgust": "0.9880414009094238",
+     "1_fear": "0.002523154253140092",
+     "1_joy": "0.0003453282988630235",
+     "1_neutral": "0.003460128325968981",
+     "1_sadness": "0.003129401709884405",
+     "1_surprise": "0.0007966639823280275"
+    },
+    "label_location": {
+     "location": "UNK"
+    }
+   }
+  }
+ ],
+ "keywords": {
+  "fat": {
+   "simple": {
+    "total": 121,
+    "sample": [
+     "fat ",
+     "fat.",
+     "fat,",
+     "fat-",
+     "fat?",
+     "fat:",
+     "fat!",
+     "fat;",
+     "fat\"",
+     "faty ",
+     "fatty ",
+     "fattier",
+     "fatest",
+     "fattest"
+    ]
+   },
+   "advanced": {
+    "total": 27,
+    "sample": [
+     "\\bfat(?:t?y|t?er|t?est|t?i(?:er|est|ness)|ness)\\b(?!\\s*(?:tire|bike|cat|chance|finger|berg|burn|loss|free|content|tax|tuesday|fs|32))",
+     "\\bphat(?:t?y|t?er|t?est|ness)\\b(?!\\s*(?:beats?|farm|brand))",
+     "\\bover[-\\s]?weight\\b",
+     "\\bobes(?:e|ity)\\b",
+     "corpulent",
+     "\\bheavy(?:set)?\\b(?!\\s*(?:metal|duty|industry|machinery|equipment|rain|traffic|users?|cream|water|oil))",
+     "\\b(?:stock|podg|stout|flabb|paunch)(?:y|i)?(?:er|est)?\\b",
+     "\\b(?:chubb?|plump|portl|rotund|tubb|chunk|flesh|dump|chonk|meat|beef|pork(?:y|ier|iest))\\b",
+     "(?i)\\blarge(?:r|st)?(?:\\s+(?:man|men|woman|women|person|people|guy|guys|gal|gals|adult|adults|child|children|teen(?:s|agers?)|couple|couples)\\b|[-\\s]+(?:bod(?:y|ied)|framed|built|waisted|bellied|hipped|thighed|chested|busted|figured)\\b)",
+     "rotund",
+     "gargantuan",
+     "elephantine",
+     "chonken",
+     "chonkster"
+    ]
+   }
+  },
+  "thin": {
+   "simple": {
+    "total": 134,
+    "sample": [
+     "thin ",
+     "thin.",
+     "thin,",
+     "thin-",
+     "thin?",
+     "thin:",
+     "thin!",
+     "thin;",
+     "thin\"",
+     "thinner",
+     "thinnest",
+     "thinness",
+     "skinny",
+     "skinnier"
+    ]
+   },
+   "advanced": {
+    "total": 54,
+    "sample": [
+     "\\bthin(?:ner|nest|ness)?\\b",
+     "\\bskinny(?:|er|iest|ness)?\\b",
+     "\\bslim(?:mer|mest|ness)?\\b",
+     "\\blean(?:er|est)?\\b",
+     "\\bslender\\b",
+     "\\brangy(?:|er|est)",
+     "willowy",
+     "svelte",
+     "sylph[-\\s]?like",
+     "under[-\\s]?weight",
+     "\\banorexi\\w*\\b",
+     "\\banorectic\\b",
+     "scrawn(?:y|ier|est)",
+     "scragg(?:ly|ier|liest)\\b"
+    ]
+   }
+  }
+ },
+ "location": {
+  "mode": "labels",
+  "total": 2560,
+  "with_data": 2560,
+  "no_data": 0,
+  "labeled": 1901,
+  "labeled_pct": 74.3,
+  "filled_from_same_author": 25,
+  "inherited_unk_from_same_author": 22,
+  "states_folded_to_us": 0,
+  "state_min_prob": 0.0,
+  "tiers": {
+   "country": 1326,
+   "state": 141,
+   "region": 434,
+   "unk": 659
+  },
+  "top_labels": [
+   [
+    "US",
+    1326
+   ],
+   [
+    "UNK",
+    659
+   ],
+   [
+    "NON_US",
+    147
+   ],
+   [
+    "EUROPE",
+    117
+   ],
+   [
+    "AMERICAS",
+    99
+   ],
+   [
+    "ASIA_OCEANIA",
+    68
+   ],
+   [
+    "VT",
+    55
+   ],
+   [
+    "CA",
+    14
+   ]
+  ],
+  "state_level": 141,
+  "sample": [
+   {
+    "author": "523275855549",
+    "location": "CA",
+    "tier": "state",
+    "prob": "0.097850",
+    "contender": "WA",
+    "filled": false,
+    "text": "&gt;most americans are fat. most americans are also broke and/or living paycheck to paycheck. am i the only one who notices a connection there? i have no doubt that socioeconomic s…"
+   },
+   {
+    "author": "166649693861",
+    "location": "US",
+    "tier": "country",
+    "prob": "0.799096",
+    "contender": "NON_US",
+    "filled": false,
+    "text": "you don't need money to go for a jog. you could also burn a few calories by choosing not to drive everywhere. a sedentary lifestyle is as much to blame for obesity as poor diet. ch…"
+   },
+   {
+    "author": "288145249275",
+    "location": "ASIA_OCEANIA",
+    "tier": "region",
+    "prob": "0.584566",
+    "contender": "EUROPE",
+    "filled": false,
+    "text": "in general you're right. however, if you're trying to lose weight and you're ridiculously overweight, you need to diet just to be light enough to *walk* a decent distance (say 2 mi…"
+   },
+   {
+    "author": "174640372755",
+    "location": "UNK",
+    "tier": "unk",
+    "prob": "",
+    "contender": "US",
+    "filled": false,
+    "text": "nice picture gallery. americans are so fat, the obesity stock will sure be a good bet for 2007 too http://www.trendio.com/word.php?wordid=49&amp;language=en"
+   }
+  ],
+  "note": "Location labels come from a separate label_location run joined by comment id. 0 of 2560 rows have no location data because neither they nor any other row by the same author appeared in that run. State labels below p=0.0 are reported at the coarser 'US' tier, which the same run supports."
+ }
+}
