@@ -18,8 +18,13 @@ import { UI_TEXT } from './constant.ts';
 // exactly on the maximum, which would otherwise leave Accept stuck disabled.
 const BOTTOM_SLACK_PX = 24;
 
+// `children` is passed explicitly rather than left to the spread: jsx-a11y's
+// anchor-has-content rule reads the JSX statically and cannot see it otherwise,
+// which fails the build wherever warnings are errors (CI=true).
 const MARKDOWN_COMPONENTS = {
-  a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+  a: ({ node, children, ...props }) => (
+    <a {...props} target="_blank" rel="noopener noreferrer">{children}</a>
+  ),
 };
 
 // `blocking` is for the re-consent case: the agreement changed under a signed-in
