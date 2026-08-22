@@ -18,6 +18,10 @@ import { UI_TEXT } from './constant.ts';
 // exactly on the maximum, which would otherwise leave Accept stuck disabled.
 const BOTTOM_SLACK_PX = 24;
 
+const MARKDOWN_COMPONENTS = {
+  a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+};
+
 // `blocking` is for the re-consent case: the agreement changed under a signed-in
 // user, so there is no dismissing the dialog — the only ways out are accepting
 // the new text or signing out.
@@ -147,7 +151,9 @@ function DuaAgreement({ show, onHide, onAccept, blocking = false, notice, declin
                 lineHeight: 1.6,
               }}
             >
-              <ReactMarkdown>{dua.markdown}</ReactMarkdown>
+              {/* Links open in a new tab so following one mid-signup doesn't
+                  navigate away from the (unsubmitted) auth form. */}
+              <ReactMarkdown components={MARKDOWN_COMPONENTS}>{dua.markdown}</ReactMarkdown>
             </div>
             <div className="text-muted small mt-2 d-flex justify-content-between flex-wrap gap-2">
               <span>
