@@ -13,10 +13,10 @@
     <li><code>&lt;category&gt;</code> — one of
         <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span><span class="pill">skin_tone</span><span class="pill">weight</span></li>
     <li><code>&lt;YYYY-MM&gt;</code> — month, e.g. <code>2015-03</code> (zero-padded).</li>
-    <li><code>&lt;prefix&gt;</code> — <code>ALL_</code> for <span class="pill">age</span><span class="pill">sexuality</span> (combined comments + submissions);
+    <li><code>&lt;prefix&gt;</code> — <code>ALL_</code> for <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span> (combined comments + submissions);
         <code>RC_</code> (Reddit Comments only) for the other categories until their combined versions are published.</li>
   </ul>
-  <p>Example: <a href="https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv"><code>https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv</code></a></p>
+  <p>Example: <a href="https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv"><code>https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv</code></a></p>
   <p class="muted">Every month is also available as Apache <strong>Parquet</strong> at the same path with a
      <code>.parquet</code> extension (e.g. <code>https://g-05a4b6.2d513.8443.data.globus.org/age/ALL_2015-03.parquet</code>).
      <strong>Parquet is recommended for scripting</strong> — it supports column selection and partial
@@ -26,10 +26,10 @@
   <table>
     <thead><tr><th>Category</th><th>Months</th><th>Date range</th><th>Formats</th><th class="num">Size</th></tr></thead>
     <tbody>
-      <tr><td>ability</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">38.9 GB</td></tr>
-      <tr><td>age</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">383.5 GB</td></tr>
-      <tr><td>race</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">116.8 GB</td></tr>
-      <tr><td>sexuality</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">106.5 GB</td></tr>
+      <tr><td>ability</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">115.0 GB</td></tr>
+      <tr><td>age</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">1051.9 GB</td></tr>
+      <tr><td>race</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">223.4 GB</td></tr>
+      <tr><td>sexuality</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">261.0 GB</td></tr>
       <tr><td>skin_tone</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">70.6 GB</td></tr>
       <tr><td>weight</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">44.6 GB</td></tr>
     </tbody>
@@ -40,13 +40,20 @@
      <code>size_bytes</code> in the manifest before bulk-pulling. Downloads support
      HTTP <strong>Range</strong> requests, so large transfers can be resumed.</p>
 
-  <h3>File schema (current columns)</h3>
-  <pre><code>id, parent id, text, author, time, subreddit, score, matched_patterns</code></pre>
+  <h3>File schema</h3>
+  <p>Columns depend on the file prefix. Every file begins with the same nine core columns:</p>
+  <pre><code>id, parent id, text, author, time, subreddit, score, matched patterns, source_row</code></pre>
+  <ul>
+    <li><code>ALL_</code> files (<span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span>)
+        &mdash; <strong>60 columns</strong>: the nine core columns plus per-post labels for moralization,
+        sentiment (Stanza, VADER, TextBlob), generalization (genericity, eventivity, boundedness,
+        habituality), emotion, and estimated US state-level user location.</li>
+    <li><code>RC_</code> files (<span class="pill">skin_tone</span><span class="pill">weight</span>)
+        &mdash; the <strong>nine core columns</strong> only. Their labeled combined versions are still to come.</li>
+  </ul>
   <p class="muted">See the
      <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md">variable list</a>
-     for full column definitions. These files are the current pre-labeling release; the forthcoming labeled
-     release will add per-post fields for moralization, sentiment (Stanza/VADER/TextBlob), generalization,
-     emotion, and estimated user location.</p>
+     for full column definitions.</p>
 
   <h2>Machine-readable index</h2>
   <p>Rather than hard-coding filenames, enumerate what's available from the manifest:</p>
@@ -84,19 +91,19 @@ isaac.download("weight", "2020-01", "2020-12", dest="./weight2020")</code></pre>
 
   <h3>Download one file</h3>
   <pre><code># curl — works on macOS, Linux, and Windows 10+ (-O keeps the remote name, -L follows redirects)
-curl -LO https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv
+curl -LO https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv
 
 # resume an interrupted download
-curl -C - -LO https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv
+curl -C - -LO https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv
 
 # GNU wget — Linux / WSL / Git Bash only (not preinstalled on macOS; "wget" in Windows
 # PowerShell is an alias for a different command and will not behave like this)
-wget https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv</code></pre>
+wget https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv</code></pre>
 
   <h3>Load straight into pandas (no local copy)</h3>
   <pre><code>import pandas as pd
 
-url = "https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.csv"
+url = "https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv"
 df = pd.read_csv(url)
 print(df.shape, list(df.columns))
 
@@ -148,17 +155,17 @@ for f in wanted:
 # One month — aggregate without downloading the file:
 duckdb.sql("""
   SELECT subreddit, count(*) AS n, avg(score) AS avg_score
-  FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet')
+  FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/ALL_2018-03.parquet')
   GROUP BY subreddit ORDER BY n DESC LIMIT 10
 """).show()</code></pre>
   <p>For <strong>multiple months</strong>, pass an explicit list of URLs. (HTTP has no directory
-     listing, so wildcard globs like <code>RC_2018-*.parquet</code> do <em>not</em> work — build the
+     listing, so wildcard globs like <code>ALL_2018-*.parquet</code> do <em>not</em> work — build the
      list from the <a href="/direct-download/manifest.json">manifest</a> or the
      <a href="/direct-download/"><code>isaac-data</code></a> loader.)</p>
   <pre><code>import duckdb
 
 base = "https://g-05a4b6.2d513.8443.data.globus.org/race"
-urls = [f"{base}/RC_2018-{m:02d}.parquet" for m in range(1, 13)]
+urls = [f"{base}/ALL_2018-{m:02d}.parquet" for m in range(1, 13)]
 
 duckdb.sql("SELECT count(*) AS n FROM read_parquet($urls) WHERE score > 100",
            params={"urls": urls}).show()

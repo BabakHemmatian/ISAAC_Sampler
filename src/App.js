@@ -54,7 +54,7 @@ const GLOBUS_COLLECTION_ID = "9fd39b9f-d60e-44c5-b475-691b614c3d46";
 // Monthly-file prefix per social group: these groups ship combined
 // comments+submissions files (ALL_YYYY-MM.*); the rest are comments-only
 // (RC_YYYY-MM.*) until their combined versions are published.
-const COMBINED_GROUPS = new Set(["sexuality", "age"]);
+const COMBINED_GROUPS = new Set(["sexuality", "age", "race", "ability"]);
 const filePrefix = (group) => (COMBINED_GROUPS.has(group) ? "ALL_" : "RC_");
 // At or below this many files, lead with clickable links; above it, lead with
 // the Globus folder / command-line options instead of a long wall of links.

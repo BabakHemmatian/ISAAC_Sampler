@@ -11,7 +11,7 @@
   <p>Files are one Parquet per <strong>social group</strong> per <strong>month</strong>, addressed as
      <code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;group&gt;/&lt;prefix&gt;&lt;YYYY-MM&gt;.parquet</code> —
      groups <code>ability, age, race, sexuality, skin_tone, weight</code>; the prefix is
-     <code>ALL_</code> for <code>age</code> and <code>sexuality</code> (combined comments + submissions) and
+     <code>ALL_</code> for <code>ability</code>, <code>age</code>, <code>race</code> and <code>sexuality</code> (combined comments + submissions) and
      <code>RC_</code> (comments only) for the other groups; months
      <code>2007-01</code> through <code>2023-12</code>. A single query can span months <em>and</em>
      groups by listing several files inside <code>read_parquet([...])</code>. For the columns you can
@@ -51,25 +51,25 @@
   <p class="muted">…or start from a worked example:</p>
   <div class="examples">
     <button data-q="SELECT subreddit, count(*) AS n, round(avg(score),1) AS avg_score
-FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet')
+FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/ALL_2018-03.parquet')
 GROUP BY subreddit ORDER BY n DESC LIMIT 10;">Subreddit activity</button>
     <button data-q="SELECT count(*) AS n_score_gt_100
-FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet')
+FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/ALL_2018-03.parquet')
 WHERE score > 100;">High-score count</button>
     <button data-q="SELECT author, score, text
-FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/ability/RC_2010-01.parquet')
+FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.parquet')
 USING SAMPLE 10 ROWS;">Random 10 posts</button>
     <button data-q="SELECT
   regexp_extract(filename, '/([^/]+)/(?:RC|RS|ALL)_', 1) AS social_group,
   count(*) AS n, round(avg(score),1) AS avg_score
 FROM read_parquet([
-  'https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet',
+  'https://g-05a4b6.2d513.8443.data.globus.org/race/ALL_2018-03.parquet',
   'https://g-05a4b6.2d513.8443.data.globus.org/weight/RC_2018-03.parquet'], filename = true)
 GROUP BY social_group ORDER BY social_group;">Two groups, one query</button>
   </div>
 
   <textarea id="sql" spellcheck="false">SELECT subreddit, count(*) AS n, round(avg(score),1) AS avg_score
-FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/RC_2018-03.parquet')
+FROM read_parquet('https://g-05a4b6.2d513.8443.data.globus.org/race/ALL_2018-03.parquet')
 GROUP BY subreddit ORDER BY n DESC LIMIT 10;</textarea>
 
   <div class="runbar">
