@@ -6,8 +6,6 @@ This repository contains the frontend scripts for [this website](https://isaac.p
 
 By using this tool, the associated data, or these repositories, you agree to the [Data Use Agreement](https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md).
 
-If you use this repository in your work, please cite us as follows:
-
 **Note:** Backend scripts can be found [here](https://github.com/BabakHemmatian/ISAAC_Sampler_Backend), while corpus development tools are located within [this repository](https://github.com/BabakHemmatian/Illinois_Social_Attitudes).
 
 ## Citation
@@ -31,7 +29,7 @@ Hemmatian, B., & Dhamdhere, S.S. (2025). ISAAC Sampler (Frontend)[Computer softw
 
 ## App Features
 
- - Authentication (via Supabase)
+ - Authentication (via Firebase Auth)
  - Date Range selection (Month-Year selection)
  - Social Group Selection (e.g., Sexuality)
  - Reproducible random samples drawn equally across the selected months (with an optional seed), downloaded as a single CSV
@@ -42,28 +40,67 @@ Hemmatian, B., & Dhamdhere, S.S. (2025). ISAAC Sampler (Frontend)[Computer softw
 
 ## Setup Instructions
 
-1. Clone the repository: ```git clone https://github.com/BabakHemmatian/ISAAC_Sampler.git```
-2. Navigate to the folder: ```cd ISAAC_Sampler```
-3. Install dependencies: ```npm install```
-4. Install additional packages: ```npm install @mui/material @mui/icons-material @mui/x-date-pickers @emotion/react @emotion/styled framer-motion axios```
-5. Set up your supabaseClient.js with your own Supabase URL and Anon Key.
-6. Run the application: ```npm run start```
+1. Clone the repository: `git clone https://github.com/BabakHemmatian/ISAAC_Sampler.git`
+2. Navigate to the folder: `cd ISAAC_Sampler`
+3. Install dependencies: `npm install`
+4. Configure the environment:
+   - `cp .env.local.example .env.local`, then fill in the `REACT_APP_FIREBASE_*` values from the
+     Firebase console (Project settings → General → Your apps → SDK setup and configuration).
+   - Set `REACT_APP_PUBLIC_ORIGIN` to the origin the app is served from. It is used to build
+     password-reset and email-verification links, so it must match the deployed site.
+   - These values are inlined into the bundle at **build** time and are not secret, but they are
+     environment-specific. Rebuild after changing them.
+5. Point the frontend at a backend. `npm run start` calls `http://localhost:8000` by default, so run
+   the [backend](https://github.com/BabakHemmatian/ISAAC_Sampler_Backend) there. A production build
+   instead issues **same-origin** requests, relying on the web server to proxy `/sample`, `/progress`
+   and the other API routes. Set `REACT_APP_API_URL` to override either default.
+6. Run the application: `npm run start`
 
 ## Deployment
 
-You can deploy the frontend on Vercel. Just make sure the API URL (currently http://127.0.0.1:8000) is updated to point to your deployed FastAPI backend.
+The build is a static Create React App bundle, so any static host will serve it. Production ISAAC
+serves it from nginx on a VM at NCSA rather than from a hosting platform.
 
-### Supabase Auth Redirect Hardening
+First run the lint gate. Create React App turns warnings into errors when `CI` is set, which most
+build servers do by default, so this is what catches a warning before a build server does:
 
-To prevent signup/reset emails from sending users to localhost, configure both app env and Supabase dashboard:
+```bash
+CI=true npm run build
+```
 
-1. Set frontend env var in production build:
-   - `REACT_APP_PUBLIC_ORIGIN=https://isaac.psychology.illinois.edu`
-2. In Supabase Dashboard -> **Authentication** -> **URL Configuration**:
-   - **Site URL**: `https://isaac.psychology.illinois.edu`
-   - **Redirect URLs**: include
-     - `https://isaac.psychology.illinois.edu/`
-     - `https://isaac.psychology.illinois.edu/update-password`
-3. Remove stale localhost callback URLs from production project settings if they are no longer needed.
+Then build the artifact and sync it into the web root. The deploy build sets `CI=` so that a stray
+warning cannot block a release:
 
-The frontend passes explicit redirect URLs in `src/Auth.js` (`emailRedirectTo` for signup and `redirectTo` for reset), and this dashboard configuration ensures email links remain correct in production.
+```bash
+CI= npm run build
+sudo cp -a /var/www/isaac-sampler /var/www/isaac-sampler.bak.$(date +%F-%H%M%S)
+sudo rsync -a --delete --exclude '/direct-download' build/ /var/www/isaac-sampler/
+sudo chown -R www-data:www-data /var/www/isaac-sampler
+```
+
+Notes:
+
+- **`--exclude '/direct-download'` is required.** `/var/www/isaac-sampler/direct-download/` holds
+  `manifest.json` and `files.csv`, which are generated server-side and are not part of this repo.
+  `--delete` without the exclude destroys them.
+- `public/pages/{query,direct-download}.html` are HTML partials fetched at runtime by the SPA. They
+  ship with the build; edit them there rather than in the bundle.
+
+### Firebase Auth configuration
+
+To keep verification and reset emails pointing at the real site rather than at localhost:
+
+1. Set `REACT_APP_PUBLIC_ORIGIN` to the canonical origin in the production build (see Setup above).
+   `src/Auth.js` passes it as `actionCodeSettings` on `sendEmailVerification` and
+   `sendPasswordResetEmail`.
+2. In the Firebase console → **Authentication** → **Settings** → **Authorized domains**, list every
+   origin the app is served from. Remove any that are no longer in use.
+3. Configure custom SMTP under **Authentication** → **Templates** so mail comes from a project
+   address instead of Firebase's default sender.
+
+Note that email links currently use Firebase's default action handler. The in-repo handler at
+`src/AuthAction.js` (route `/auth/action`) is dormant until a custom action URL is set on the project.
+
+**Deploying anywhere public creates a second live copy of the app.** The two pages under
+`public/pages/` are access-controlled by nginx in production; a host without an equivalent rule will
+serve them to anyone. Prefer keeping deployments to the one origin unless you replicate the gate.
