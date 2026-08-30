@@ -8,13 +8,13 @@
 
   <h2>URL scheme</h2>
   <p>Every file is a plain <code>GET</code> over HTTPS. No authentication, no query parameters:</p>
-  <pre><code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;category&gt;/&lt;prefix&gt;&lt;YYYY-MM&gt;.csv</code></pre>
+  <pre><code>https://g-05a4b6.2d513.8443.data.globus.org/&lt;category&gt;/ALL_&lt;YYYY-MM&gt;.csv</code></pre>
   <ul>
     <li><code>&lt;category&gt;</code> — one of
         <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span><span class="pill">skin_tone</span><span class="pill">weight</span></li>
+    <li><code>ALL_</code> — a literal prefix: every category ships combined comments <em>and</em>
+        submissions in one file.</li>
     <li><code>&lt;YYYY-MM&gt;</code> — month, e.g. <code>2015-03</code> (zero-padded).</li>
-    <li><code>&lt;prefix&gt;</code> — <code>ALL_</code> for <span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span> (combined comments + submissions);
-        <code>RC_</code> (Reddit Comments only) for the other categories until their combined versions are published.</li>
   </ul>
   <p>Example: <a href="https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv"><code>https://g-05a4b6.2d513.8443.data.globus.org/ability/ALL_2010-01.csv</code></a></p>
   <p class="muted">Every month is also available as Apache <strong>Parquet</strong> at the same path with a
@@ -30,27 +30,22 @@
       <tr><td>age</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">1051.9 GB</td></tr>
       <tr><td>race</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">223.4 GB</td></tr>
       <tr><td>sexuality</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">261.0 GB</td></tr>
-      <tr><td>skin_tone</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">70.6 GB</td></tr>
-      <tr><td>weight</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">44.6 GB</td></tr>
+      <tr><td>skin_tone</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">123.5 GB</td></tr>
+      <tr><td>weight</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">133.4 GB</td></tr>
     </tbody>
   </table>
   <p class="muted">Every category has both CSV and Parquet for all 204 months (2007-01 through 2023-12). The
      <a href="/direct-download/manifest.json">manifest</a> is always the authoritative list of what exists.</p>
-  <p class="muted">Individual files range from tens of KB to several hundred MB — check
-     <code>size_bytes</code> in the manifest before bulk-pulling. Downloads support
-     HTTP <strong>Range</strong> requests, so large transfers can be resumed.</p>
+  <p class="muted">Individual files range from a few hundred KB to <strong>12.9 GB</strong> (CSV) and
+     5.9 GB (Parquet) — check <code>size_bytes</code> in the manifest before bulk-pulling. Downloads
+     support HTTP <strong>Range</strong> requests, so large transfers can be resumed.</p>
 
   <h3>File schema</h3>
-  <p>Columns depend on the file prefix. Every file begins with the same nine core columns:</p>
+  <p>Every file in every category carries the same <strong>60 columns</strong>. Nine are core:</p>
   <pre><code>id, parent id, text, author, time, subreddit, score, matched patterns, source_row</code></pre>
-  <ul>
-    <li><code>ALL_</code> files (<span class="pill">ability</span><span class="pill">age</span><span class="pill">race</span><span class="pill">sexuality</span>)
-        &mdash; <strong>60 columns</strong>: the nine core columns plus per-post labels for moralization,
-        sentiment (Stanza, VADER, TextBlob), generalization (genericity, eventivity, boundedness,
-        habituality), emotion, and estimated US state-level user location.</li>
-    <li><code>RC_</code> files (<span class="pill">skin_tone</span><span class="pill">weight</span>)
-        &mdash; the <strong>nine core columns</strong> only. Their labeled combined versions are still to come.</li>
-  </ul>
+  <p>The remaining 51 are per-post labels: moralization, sentiment (Stanza, VADER, TextBlob),
+     generalization (genericity, eventivity, boundedness, habituality), emotion, and estimated
+     US state-level user location.</p>
   <p class="muted">See the
      <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md">variable list</a>
      for full column definitions.</p>

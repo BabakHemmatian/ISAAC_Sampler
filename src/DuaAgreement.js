@@ -1,11 +1,11 @@
 // Scroll-through Data Use Agreement modal shown at registration.
 //
-// Requested by the UIUC Legal Office (2026-08-02) to replace the old checkbox +
-// external link: the user must scroll the full text before they can accept, and
-// the acceptance timestamp is stored server-side with the version identifiers.
+// Replaces an earlier checkbox-plus-external-link flow: the user must scroll the
+// full text before they can accept, and the acceptance timestamp is stored
+// server-side alongside the version identifiers.
 //
 // The text is fetched live from GET /dua, which proxies the DUA markdown out of
-// the public corpus repo — so edits by the legal office take effect immediately
+// the public corpus repo — so edits to the agreement take effect immediately
 // with no frontend rebuild. The sha256/commit returned alongside it are echoed
 // back to /record_consent so each signup is pinned to the exact text displayed.
 import React, { useCallback, useEffect, useRef, useState } from 'react';

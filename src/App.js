@@ -51,11 +51,11 @@ const html = (s) => ({ __html: s ?? "" });
 // bytes come straight off the storage DTNs, never through this VM.
 const GLOBUS_DATA_BASE = "https://g-05a4b6.2d513.8443.data.globus.org";
 const GLOBUS_COLLECTION_ID = "9fd39b9f-d60e-44c5-b475-691b614c3d46";
-// Monthly-file prefix per social group: these groups ship combined
-// comments+submissions files (ALL_YYYY-MM.*); the rest are comments-only
-// (RC_YYYY-MM.*) until their combined versions are published.
-const COMBINED_GROUPS = new Set(["sexuality", "age", "race", "ability"]);
-const filePrefix = (group) => (COMBINED_GROUPS.has(group) ? "ALL_" : "RC_");
+// Every social group ships combined comments+submissions files (ALL_YYYY-MM.*).
+// The comments-only RC_ files were retired on 2026-08-30, when skin_tone and
+// weight became the last two categories to migrate; nothing is served under
+// that prefix any more, so the per-group lookup this used to need is gone.
+const FILE_PREFIX = "ALL_";
 // At or below this many files, lead with clickable links; above it, lead with
 // the Globus folder / command-line options instead of a long wall of links.
 const FULL_FILES_LINKS_MAX = 10;
@@ -271,13 +271,13 @@ function MainApp({ initialPage = "home" }) {
   // VM does no file I/O and serves none of these bytes.
   const buildFullFileLinks = () => {
     const months = monthsBetween(formatDate(startDate), formatDate(endDate));
-    const urls = months.map((ym) => `${GLOBUS_DATA_BASE}/${socialGroup}/${filePrefix(socialGroup)}${ym}.csv`);
+    const urls = months.map((ym) => `${GLOBUS_DATA_BASE}/${socialGroup}/${FILE_PREFIX}${ym}.csv`);
     setFullFiles({ category: socialGroup, months, urls, totalBytes: null });
     // Best-effort: sum CSV sizes from the published manifest so users can see how
     // big the pull is before they start. Failure just leaves the size hidden.
     axios.get("/direct-download/manifest.json")
       .then(({ data }) => {
-        const want = new Set(months.map((ym) => `${socialGroup}/${filePrefix(socialGroup)}${ym}.csv`));
+        const want = new Set(months.map((ym) => `${socialGroup}/${FILE_PREFIX}${ym}.csv`));
         let total = 0;
         for (const r of data) {
           if (r.format === "csv" && want.has(r.rel_path)) total += r.size_bytes || 0;
@@ -1117,11 +1117,11 @@ function QueryPlaygroundPage() {
       if (end > "2023-12") end = "2023-12";
       const months = monthsBetween(start, end);
       const urls = [];
-      for (const g of groups) for (const ym of months) urls.push(DATA_BASE + "/" + g + "/" + filePrefix(g) + ym + ".parquet");
+      for (const g of groups) for (const ym of months) urls.push(DATA_BASE + "/" + g + "/" + FILE_PREFIX + ym + ".parquet");
       const list = urls.map((u) => "  '" + u + "'").join(",\n");
       const sql =
         "SELECT\n" +
-        "  regexp_extract(filename, '/([^/]+)/(?:RC|RS|ALL)_', 1) AS social_group,\n" +
+        "  regexp_extract(filename, '/([^/]+)/ALL_', 1) AS social_group,\n" +
         "  count(*) AS n, round(avg(score), 1) AS avg_score\n" +
         "FROM read_parquet([\n" + list + "], filename = true)\n" +
         "GROUP BY social_group\n" +
