@@ -26,26 +26,26 @@
   <table>
     <thead><tr><th>Category</th><th>Months</th><th>Date range</th><th>Formats</th><th class="num">Size</th></tr></thead>
     <tbody>
-      <tr><td>ability</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">115.0 GB</td></tr>
-      <tr><td>age</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">1051.9 GB</td></tr>
-      <tr><td>race</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">223.4 GB</td></tr>
-      <tr><td>sexuality</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">261.0 GB</td></tr>
-      <tr><td>skin_tone</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">123.5 GB</td></tr>
-      <tr><td>weight</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">133.4 GB</td></tr>
+      <tr><td>ability</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">117.2 GB</td></tr>
+      <tr><td>age</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">1079.0 GB</td></tr>
+      <tr><td>race</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">231.3 GB</td></tr>
+      <tr><td>sexuality</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">268.8 GB</td></tr>
+      <tr><td>skin_tone</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">127.3 GB</td></tr>
+      <tr><td>weight</td><td class="num">204</td><td>2007-01 → 2023-12</td><td>csv, parquet</td><td class="num">135.5 GB</td></tr>
     </tbody>
   </table>
   <p class="muted">Every category has both CSV and Parquet for all 204 months (2007-01 through 2023-12). The
      <a href="/direct-download/manifest.json">manifest</a> is always the authoritative list of what exists.</p>
-  <p class="muted">Individual files range from a few hundred KB to <strong>12.9 GB</strong> (CSV) and
-     5.9 GB (Parquet) — check <code>size_bytes</code> in the manifest before bulk-pulling. Downloads
+  <p class="muted">Individual files range from a few hundred KB to <strong>13.4 GB</strong> (CSV) and
+     5.8 GB (Parquet) — check <code>size_bytes</code> in the manifest before bulk-pulling. Downloads
      support HTTP <strong>Range</strong> requests, so large transfers can be resumed.</p>
 
   <h3>File schema</h3>
-  <p>Every file in every category carries the same <strong>60 columns</strong>. Nine are core:</p>
-  <pre><code>id, parent id, text, author, time, subreddit, score, matched patterns, source_row</code></pre>
+  <p>Every file in every category carries the same <strong>59 columns</strong>. Eight are core:</p>
+  <pre><code>id, parent id, text, author, time, subreddit, score, matched patterns</code></pre>
   <p>The remaining 51 are per-post labels: moralization, sentiment (Stanza, VADER, TextBlob),
      generalization (genericity, eventivity, boundedness, habituality), emotion, and estimated
-     US state-level user location.</p>
+     US state-level user location (one final label per account, applied consistently across every month and category).</p>
   <p class="muted">See the
      <a href="https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/variable_list.md">variable list</a>
      for full column definitions.</p>
