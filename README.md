@@ -13,17 +13,18 @@ If you use this repository in your work, please cite us as follows:
 
 ### APA Format
 ```
-Hemmatian, B., & Dhamdhere, S.S. (2025). ISAAC Sampler (Frontend)[Computer software]. GitHub. https://github.com/BabakHemmatian/ISAAC_Sampler/
+Hemmatian, B., Dhamdhere, S. S., & Mahajan, V. (2026). ISAAC Sampler (Frontend) [Computer software]. GitHub. https://github.com/BabakHemmatian/ISAAC_Sampler
 ```
-### BibTex Format
+### BibLaTex Format
 ```
-@software{hemmatian2025isaac,
-  author       = {Hemmatian, Babak and Dhamdhere, S. S.},
-  title        = {ISAAC Sampler (Frontend)},
-  year         = {2025},
+@software{hemmatian2026isaacfrontend,
+  author       = {Hemmatian, Babak and Dhamdhere, S. S. and Mahajan, V.},
+  title        = {{ISAAC} Sampler (Frontend)},
+  year         = {2026},
+  organization = {GitHub},
   url          = {https://github.com/BabakHemmatian/ISAAC_Sampler},
-  publisher    = {GitHub},
-  note         = {Computer software}
+  urldate      = {2026-09-07},
+  version      = {1.0}
 }
 ```
 
