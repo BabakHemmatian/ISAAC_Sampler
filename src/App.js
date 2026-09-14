@@ -192,8 +192,8 @@ function MainApp({ initialPage = "home" }) {
   }, []);
 
   // Firebase auth state. Only treat a user as logged in once their email is
-  // verified (parity with the old Supabase confirm-before-login behavior);
-  // unverified users fall through to <Auth />, which shows the verify screen.
+  // verified; unverified users fall through to <Auth />, which shows the
+  // verify screen.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setSession(user && user.emailVerified ? user : null);

@@ -1,4 +1,4 @@
-// Firebase Auth client for ISAAC. Replaces the old Supabase anon-key client.
+// Firebase Auth client for ISAAC.
 // Config comes from build-time env vars (REACT_APP_FIREBASE_*, inlined by CRA)
 // so no keys are committed to source. Set them in .env.local — see
 // .env.local.example. These values are NOT secret (they ship in the browser
@@ -29,8 +29,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
-// Persist the session in localStorage and auto-refresh tokens — mirrors the
-// old Supabase { persistSession: true, autoRefreshToken: true } behavior.
+// Persist the session in localStorage and auto-refresh tokens.
 // browserLocalPersistence is the web default, but we set it explicitly so a
 // future SDK default change can't silently log everyone out on refresh.
 setPersistence(auth, browserLocalPersistence).catch((err) => {

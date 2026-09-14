@@ -9,24 +9,54 @@ By using this tool, the associated data, or these repositories, you agree to the
 **Note:** Backend scripts can be found [here](https://github.com/BabakHemmatian/ISAAC_Sampler_Backend), while corpus development tools are located within [this repository](https://github.com/BabakHemmatian/Illinois_Social_Attitudes).
 
 ## Citation
-If you use this repository in your work, please cite us as follows:
 
-### APA Format
+Please cite the ISAAC paper. **One citation covers the whole project** — the
+corpus, the pipeline, the models, the website, and every access route. Please do
+not cite this repository separately; keeping references in one place is what
+allows the project's citations to be found together.
+
+### APA
+
 ```
-Hemmatian, B., Dhamdhere, S. S., & Mahajan, V. (2026). ISAAC Sampler (Frontend) [Computer software]. GitHub. https://github.com/BabakHemmatian/ISAAC_Sampler
+Hemmatian, B., Hadjarab, S., Chen, J., & Kurdi, B. (2026). The Illinois Social Attitudes
+Aggregate Corpus (ISAAC): An Open Tool and Reproducible Pipeline for Analyzing Social
+Group Discourse at Scale [Manuscript submitted for publication].
 ```
-### BibLaTex Format
-```
-@software{hemmatian2026isaacfrontend,
-  author       = {Hemmatian, Babak and Dhamdhere, S. S. and Mahajan, V.},
-  title        = {{ISAAC} Sampler (Frontend)},
-  year         = {2026},
-  organization = {GitHub},
-  url          = {https://github.com/BabakHemmatian/ISAAC_Sampler},
-  urldate      = {2026-09-07},
-  version      = {1.0}
+
+### BibTeX
+
+```bibtex
+@article{hemmatian2026isaac,
+  author = {Hemmatian, Babak and Hadjarab, Sarah and Chen, Jessica and Kurdi, Benedek},
+  title  = {The {Illinois} Social Attitudes Aggregate Corpus ({ISAAC}): An Open Tool and Reproducible Pipeline for Analyzing Social Group Discourse at Scale},
+  year   = {2026},
+  note   = {Manuscript submitted for publication}
 }
 ```
+
+> This reference is updated when the preprint is announced. GitHub's
+> **Cite this repository** button reads [`CITATION.cff`](./CITATION.cff) and shows
+> the same reference.
+
+### Software authorship
+
+Who wrote the code in this repository is recorded in
+[`CITATION.cff`](./CITATION.cff) — a separate question from what to cite.
+People who contributed in other ways are listed under
+[Acknowledgments](#acknowledgments).
+
+## Acknowledgments
+
+| | |
+| --- | --- |
+| Keshav Soni | Expiring signed download links, email notifications |
+| Ty Villaneuva | Logo and visual design |
+
+## License
+
+Released under the [MIT License](./LICENSE). The ISAAC corpus this service
+distributes is governed separately by the
+[Data Use Agreement](https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md).
 
 ## App Features
 
