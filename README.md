@@ -4,7 +4,7 @@ This repository contains the frontend scripts for [this website](https://isaac.p
 
 ## Data Use Agreement
 
-By using this tool, the associated data, or these repositories, you agree to the [Data Use Agreement](https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md).
+By using this tool, the associated data, or these repositories, you agree to the [Data Use Agreement](https://github.com/BabakHemmatian/Illinois_Social_Attitudes/blob/main/Data_Use_Agreement.md). Questions and concerns should be addressed to [isaac.corpus.support@gmail.com](mailto:isaac.corpus.support@gmail.com).
 
 **Note:** Backend scripts can be found [here](https://github.com/BabakHemmatian/ISAAC_Sampler_Backend), while corpus development tools are located within [this repository](https://github.com/BabakHemmatian/Illinois_Social_Attitudes).
 
