@@ -31,7 +31,13 @@ const FAVICON   = "/ISAAC Logo 3.png";
 // cached token and silently refreshes it when it is close to expiry, so it is
 // safe (and necessary) to call on every request: a long sampling job can
 // outlive the one-hour lifetime of the token it started with.
+//
+// Waits for Firebase to restore the saved session first. /direct-download and
+// /query are reached by full page loads and fetch on mount, before the session
+// is restored, so without this currentUser is still null and the request goes
+// out with no token.
 async function authHeaders() {
+  await auth.authStateReady();
   const user = auth.currentUser;
   if (!user) return {};
   try {
@@ -700,12 +706,14 @@ function MainApp({ initialPage = "home" }) {
                         </Typography>
 
                         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
-                          <Button component="a" href={globusFolderLink(fullFiles.category)} target="_blank" rel="noreferrer"
-                                  variant="contained" sx={{ borderRadius: BR_ONLY }}>
-                            {UI_TEXT?.fullFiles?.openInGlobus ?? "Browse & download in Globus"}
-                          </Button>
-                          <Button onClick={downloadUrlList} variant="outlined" sx={{ borderRadius: BR_ONLY }}>
+                          <Button onClick={downloadUrlList} variant="contained" sx={{ borderRadius: BR_ONLY }}>
                             {UI_TEXT?.fullFiles?.downloadList ?? "Download file list (isaac_urls.txt)"}
+                          </Button>
+                          {/* The Globus web app always asks for a login, even on this public
+                              collection; only the direct HTTPS links below are anonymous. */}
+                          <Button component="a" href={globusFolderLink(fullFiles.category)} target="_blank" rel="noreferrer"
+                                  variant="outlined" sx={{ borderRadius: BR_ONLY }}>
+                            {UI_TEXT?.fullFiles?.openInGlobus ?? "Browse in Globus (free Globus login)"}
                           </Button>
                         </Box>
 
@@ -717,19 +725,27 @@ function MainApp({ initialPage = "home" }) {
                           </a>
                         </Typography>
 
+                        <Typography variant="body2">
+                          {UI_TEXT?.fullFiles?.linksNote ?? "Click any file below to download it — no account needed."}
+                        </Typography>
+                        {/* Always list the direct links: they are the only no-login path.
+                            Long ranges scroll instead of being hidden. */}
+                        <Box sx={{
+                          display: "flex", flexDirection: "column", gap: 0.25,
+                          ...(fullFiles.urls.length > FULL_FILES_LINKS_MAX
+                            ? { maxHeight: 220, overflowY: "auto", pr: 1 } : {}),
+                        }}>
+                          {fullFiles.urls.map((u) => (
+                            <a key={u} href={u} style={{ color: "#318CE7", wordBreak: "break-all" }}>
+                              {u.split("/").slice(-2).join("/")}
+                            </a>
+                          ))}
+                        </Box>
                         {fullFiles.urls.length > FULL_FILES_LINKS_MAX ? (
                           <Typography variant="body2" color="text.secondary">
                             {UI_TEXT?.fullFiles?.cliNote ?? "Prefer the command line? The Direct Download tab has wget / aria2c recipes that use the file list above."}
                           </Typography>
-                        ) : (
-                          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
-                            {fullFiles.urls.map((u) => (
-                              <a key={u} href={u} style={{ color: "#318CE7", wordBreak: "break-all" }}>
-                                {u.split("/").slice(-2).join("/")}
-                              </a>
-                            ))}
-                          </Box>
-                        )}
+                        ) : null}
 
                         {UI_TEXT?.fullFiles?.excelNote ? (
                           <Typography variant="caption" color="text.secondary">

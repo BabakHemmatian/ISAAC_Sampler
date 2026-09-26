@@ -11,9 +11,10 @@ export const UI_TEXT = {
   fullFiles: {
     heading: "Whole monthly files — direct download",
     servedNote: "These files download directly from our Globus storage, not through this website, so even large pulls stay fast.",
-    openInGlobus: "Browse & download in Globus",
+    openInGlobus: "Browse in Globus (free Globus login)",
     downloadList: "Download file list (isaac_urls.txt)",
-    bulkNote: "To download several files at once without writing any code: open the folder in Globus (button above), install the free Globus Connect Personal app once, then drag-and-drop the files onto your computer.",
+    linksNote: "Click any file below to download it — no account needed.",
+    bulkNote: "For drag-and-drop bulk downloads without code, sign in to Globus (free; most university logins work), open the folder with the button above, and use the free Globus Connect Personal app.",
     connectAppLabel: "Get Globus Connect Personal",
     connectAppUrl: "https://www.globus.org/globus-connect-personal",
     cliNote: "Prefer the command line? The Direct Download tab has wget / aria2c recipes that use the isaac_urls.txt list above.",
