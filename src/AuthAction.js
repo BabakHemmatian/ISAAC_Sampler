@@ -9,9 +9,10 @@ import { auth } from './firebaseClient';
 import { AUTH_FONT_CSS, useAuthFonts } from './authStyles';
 import { UI_TEXT } from './constant.ts';
 
-// Custom Firebase email-action handler (set as the "action URL" in the Firebase
-// console: Authentication -> Templates -> edit -> customize action URL ->
-// https://isaac.psychology.illinois.edu/auth/action).
+// Custom Firebase email-action handler. The backend's /auth_email/* endpoints
+// mail links to this page (https://isaac.psychology.illinois.edu/auth/action).
+// It can't be set as the console's action URL: Firebase rejects that on this
+// project with EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED.
 //
 // WHY THIS EXISTS: Firebase's default handler auto-applies the oobCode on page
 // load. Corporate/university mail scanners (e.g. Microsoft 365 Safe Links)

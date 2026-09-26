@@ -44,6 +44,43 @@ function getSafeRedirectOrigin() {
 // Must be an authorized domain in the Firebase console.
 const actionCodeSettings = () => ({ url: `${getSafeRedirectOrigin()}/`, handleCodeInApp: false });
 
+// Account emails go through the backend (/auth_email/*), which mails a link to
+// our scanner-safe /auth/action page. Firebase won't let this project change its
+// own emails' action URL, and its default handler spends the one-time code as soon
+// as a university mail scanner opens the link. If the backend can't send, fall
+// back to Firebase's own email so nobody is left without a link. A 429 is a real
+// "slow down", so it is surfaced instead of triggering a second email.
+async function postAccountEmail(path, init) {
+  let res;
+  try {
+    res = await fetch(path, { method: 'POST', ...init });
+  } catch (_) {
+    return false;
+  }
+  if (res.status === 429) {
+    const err = new Error('Too many emails requested.');
+    err.code = 'auth/too-many-requests';
+    throw err;
+  }
+  return res.ok;
+}
+
+async function sendVerificationEmail(user) {
+  const token = await user.getIdToken();
+  const sent = await postAccountEmail('/auth_email/verify', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!sent) await sendEmailVerification(user, actionCodeSettings());
+}
+
+async function sendResetEmail(email) {
+  const sent = await postAccountEmail('/auth_email/reset', {
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!sent) await sendPasswordResetEmail(auth, email, actionCodeSettings());
+}
+
 // Record Data-Use-Agreement consent server-side (Firebase user profiles can't
 // hold arbitrary fields). Best-effort: a failure here must never block signup.
 // `acceptance` comes from <DuaAgreement />: the version identifiers of the exact
@@ -160,7 +197,7 @@ function Auth() {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         // Legally meaningful; fire-and-forget so it can't block the flow.
         recordAgreementConsent(cred.user, agreementAcceptance);
-        await sendEmailVerification(cred.user, actionCodeSettings());
+        await sendVerificationEmail(cred.user);
         setPendingEmail(email);
         setAwaitingVerify(true);
         setResendCooldownSeconds(60);
@@ -183,7 +220,7 @@ function Auth() {
     }
     setLoading(true);
     try {
-      await sendEmailVerification(auth.currentUser, actionCodeSettings());
+      await sendVerificationEmail(auth.currentUser);
       setSuccess(UI_TEXT.auth.signupCodeSent);
     } catch (err) {
       setError(friendlyAuthError(err));
@@ -212,14 +249,13 @@ function Auth() {
     }
     setLoading(true);
     try {
-      // The reset link points at our /auth/action handler (set as the custom
-      // action URL in the Firebase console), which applies the code only on
-      // explicit submit — scanner-safe.
-      await sendPasswordResetEmail(auth, email, actionCodeSettings());
+      // The reset link points at our /auth/action handler, which applies the
+      // code only on explicit submit — scanner-safe.
+      await sendResetEmail(email);
       setSuccess(UI_TEXT.auth.resetSent);
     } catch (err) {
-      // With email-enumeration protection on, Firebase resolves successfully
-      // regardless; only surface real errors (e.g. rate limiting).
+      // Both senders answer the same whether or not the account exists; only
+      // real errors (e.g. rate limiting) land here.
       setError(friendlyAuthError(err));
     } finally {
       setResetCooldownSeconds(60);
